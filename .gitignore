@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+
+# Virtualenv
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+
+# Env files
+.env
+
+# Telethon sessions
+*.session
+*.session-journal
+
+# SQLite databases
+*.db
+
+# macOS
+.DS_Store
