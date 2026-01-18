@@ -30,12 +30,32 @@ cp .env.example .env
 - `SOURCES` is a set of normalized keys:
   - public usernames: `"@channel_or_group"` (lowercase)
   - any chat by id: `"chat_id:<event.chat_id>"`
+- `CHAT_ID_ALIASES` is an optional dict for chat_id labels shown in notifications:
+  - use chat ids as ints: `-1001234567890`
+  - values should be short, no-spaces labels like `"team_feed"`
 - `RULES` are dicts with `name`, `keywords`, optional `regex`, optional `exclude_keywords`.
 
 ## Run
 ```bash
 python src/app.py
 ```
+
+## Session login
+Telescope uses a **user-session** (not a bot token). On first run it will ask
+you to log in and create a local `.session` file for Telethon.
+
+You can choose a login method:
+- QR code (default)
+- Phone code (SMS/Telegram login code)
+
+If Telegram does not send the SMS/phone code (a known issue with some accounts
+and regions), choose the QR code flow instead. It is the most reliable way to
+create the session.
+
+Optional env overrides:
+- `LOGIN_METHOD=qr` or `LOGIN_METHOD=phone` to skip the prompt.
+- `PHONE=+1234567890` to prefill the phone login.
+- `2FA=your_password` if your account has a password set.
 
 At startup you'll see a simple menu. The default option lists **archived**
 group chats without usernames to help you discover `chat_id` values to paste

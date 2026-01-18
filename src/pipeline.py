@@ -20,6 +20,7 @@ import re
 from typing import Iterable, Optional
 
 from telethon.tl.custom import Message
+from telethon.tl.types import PeerUser, PeerChannel
 
 import settings
 from rules import Rule, RuleMatch, match_rules
@@ -68,6 +69,25 @@ def source_key_from_message(message: Message) -> str:
     return f"chat_id:{message.chat_id}"
 
 
+def format_source_label(source_key: str) -> str:
+    """Return a human-friendly source label, using chat_id aliases if present."""
+
+    if not source_key.startswith("chat_id:"):
+        return source_key
+
+    chat_id_raw = source_key.split("chat_id:", 1)[1]
+    try:
+        chat_id = int(chat_id_raw)
+    except ValueError:
+        return source_key
+
+    alias = settings.CHAT_ID_ALIASES.get(chat_id)
+    if not alias:
+        return source_key
+
+    return f"{alias} ({source_key})"
+
+
 def build_context(message: Message) -> MessageContext:
     """Build a MessageContext from Telethon's Message object."""
 
@@ -75,8 +95,12 @@ def build_context(message: Message) -> MessageContext:
     text = message.raw_text or ""
 
     permalink = None
-    if message.chat and message.chat.username:
-        permalink = f"https://t.me/{message.chat.username}/{message.id}"
+    peer_id = message.peer_id
+    if message.chat and peer_id:
+        if isinstance(peer_id, PeerUser):
+            permalink = f"https://t.me/c/{message.peer_id.chat_id}/{message.id}"
+        elif isinstance(peer_id, PeerChannel):
+            permalink = f"https://t.me/c/{message.peer_id.channel_id}/{message.id}"
 
     return MessageContext(
         source_key=source_key,
@@ -92,26 +116,26 @@ def _format_notification(match: RuleMatch, context: MessageContext, snippet: str
     # Centralized formatting keeps notifications consistent and easy to adjust.
     # Telegram Markdown is supported by passing parse_mode="md" when sending.
     def escape_md(value: str) -> str:
-        for ch in ("*", "_", "`", "["):
+        for ch in ("*", "`", "["):
             value = value.replace(ch, f"\\{ch}")
         return value
 
-    timestamp = context.date.astimezone().strftime("%Y-%m-%d %H:%M:%S %Z").strip()
+    timestamp = context.date.astimezone().strftime("%H:%M:%S %Y-%m-%d").strip()
     reason = escape_md(match.reason)
-    source = escape_md(context.source_key)
+    source = escape_md(format_source_label(context.source_key))
     rule_name = escape_md(match.rule_name)
     excerpt = escape_md(snippet)
 
     lines = [
-        timestamp,
+        f"[{timestamp}]",
         f"**Rule:** {rule_name}",
         f"**Source:** {source}",
-        f"**Reason:** {reason}",
-        "**Excerpt:**",
+        f"\n**Why matched:**\n{reason}",
+        "\n**Message excerpt:**",
         excerpt,
     ]
     if context.permalink:
-        lines.append(f"**Permalink:** {context.permalink}")
+        lines.append(f"\n**Permalink:** {context.permalink}")
     return "\n".join(lines)
 
 
@@ -153,7 +177,7 @@ async def process_message(
     fingerprint = compute_fingerprint(context.source_key, normalized_text)
     if fingerprint and settings.DEDUP_ONLY_ON_MATCH:
         if storage.is_seen(fingerprint):
-            LOGGER.info("Dedup skip for %s", context.source_key)
+            LOGGER.info("Dedup skip for %s (same message)", format_source_label(context.source_key))
             storage.set_last_id(context.source_key, context.message_id)
             return
         storage.mark_seen(fingerprint)
@@ -172,7 +196,7 @@ async def process_message(
         )
         notification = _format_notification(match, context, snippet)
         await client.send_message("me", notification, parse_mode="md")
-        LOGGER.info("Match saved for %s (%s)", context.source_key, match.rule_name)
+        LOGGER.info("Match saved for %s (%s)", format_source_label(context.source_key), match.rule_name)
 
     # Update the last_message_id after all match handling to ensure restart safety.
     storage.set_last_id(context.source_key, context.message_id)

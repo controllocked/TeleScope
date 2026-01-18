@@ -99,7 +99,6 @@ class Storage:
             # - reason: human-readable match explanation (keywords/regex)
             # - text_snippet: clipped portion of the message text
             # - permalink: t.me link when public usernames exist
-            # - created_at: timestamp when the match was stored
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS matches (
@@ -111,11 +110,64 @@ class Storage:
                     rule_name TEXT,
                     reason TEXT,
                     text_snippet TEXT,
-                    permalink TEXT,
-                    created_at TIMESTAMP
+                    permalink TEXT
                 )
                 """
             )
+            self._drop_matches_created_at(conn)
+
+    @staticmethod
+    def _drop_matches_created_at(conn: sqlite3.Connection) -> None:
+        columns = conn.execute("PRAGMA table_info(matches)").fetchall()
+        if not columns:
+            return
+        column_names = {row["name"] for row in columns}
+        if "created_at" not in column_names:
+            return
+
+        conn.execute(
+            """
+            CREATE TABLE matches_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_key TEXT,
+                chat_id INTEGER,
+                message_id INTEGER,
+                date TIMESTAMP,
+                rule_name TEXT,
+                reason TEXT,
+                text_snippet TEXT,
+                permalink TEXT
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO matches_new (
+                id,
+                source_key,
+                chat_id,
+                message_id,
+                date,
+                rule_name,
+                reason,
+                text_snippet,
+                permalink
+            )
+            SELECT
+                id,
+                source_key,
+                chat_id,
+                message_id,
+                date,
+                rule_name,
+                reason,
+                text_snippet,
+                permalink
+            FROM matches
+            """
+        )
+        conn.execute("DROP TABLE matches")
+        conn.execute("ALTER TABLE matches_new RENAME TO matches")
 
     def get_last_id(self, source_key: str) -> Optional[int]:
         """Return the last processed message_id for a source, if any."""
@@ -166,7 +218,6 @@ class Storage:
     def save_match(self, context: MessageContext, match: MatchRecord) -> None:
         """Persist a match to the append-only matches table."""
 
-        created_at = datetime.now(timezone.utc)
         with self._connect() as conn:
             conn.execute(
                 """
@@ -178,9 +229,8 @@ class Storage:
                     rule_name,
                     reason,
                     text_snippet,
-                    permalink,
-                    created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    permalink
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     context.source_key,
@@ -191,7 +241,6 @@ class Storage:
                     match.reason,
                     match.text_snippet,
                     context.permalink,
-                    created_at.isoformat(),
                 ),
             )
 

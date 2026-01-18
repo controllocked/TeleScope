@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from telethon import events
 
 from client import build_client
+from get_session import authorize
 from pipeline import process_message
 from rules import build_rules
 from storage import Storage
@@ -128,6 +130,8 @@ def main() -> None:
     rules = build_rules(settings.RULES)
 
     client = build_client()
+    client.loop.run_until_complete(client.connect())
+    client.loop.run_until_complete(authorize(client))
 
     # Single handler keeps Telethon integration minimal and defers all filtering
     # to our pipeline for consistency and testability.
