@@ -16,9 +16,24 @@ DB_PATH = os.path.join(os.path.dirname(__file__), "telescope.db")
 # - Otherwise use "chat_id:<event.chat_id>"
 # This lets us uniformly handle channels, groups, supergroups, and private chats.
 SOURCES = {
-    "@testiktestik111",  # public channel/group by username
-    "chat_id:1816083518",  # private chat or any chat without a username
+    "chat_id:-1003530123436", # private chat or any chat without a username
+    "@testourbo", # public channel/group by username
+    "@tonprices",
+    "chat_id:-1001894159671",
+    "chat_id:-1003557190852"
 }
+
+# Optional aliases for chat_id sources. Keys are chat_id integers and values
+# should be short labels (no spaces) used in notifications.
+CHAT_ID_ALIASES = {
+    -1003530123436: "private_feed",
+    -1003557190852: "testTonCoin",
+    -1001894159671: "tumbaChat"
+
+
+}
+
+
 
 # Rules define what counts as a match. Each rule can include:
 # - name: human-readable label for logging and notifications
@@ -49,6 +64,18 @@ RULES = [
         'keywords':['Haaland','mc','england'],
         'regex': [],
         'exclude_keywords': ['проиграл', 'lose']
+    },
+    {
+        'name': 'Toncoin',
+        'keywords': ['$'],
+        'regex': [],
+        'exclude_keywords': []
+    },
+    {
+        'name': 'tumbatest',
+        'keywords': ['спокойной', 'ноч'],
+        'regex': [],
+        'exclude_keywords': []
     }
 ]
 
@@ -58,7 +85,7 @@ RULES = [
 # - DEDUP_TTL_DAYS: cleanup horizon for fingerprints
 DEDUP_MODE = "per_source"
 DEDUP_ONLY_ON_MATCH = True
-DEDUP_TTL_DAYS = 30
+DEDUP_TTL_DAYS = 3
 
 # Notification snippet size for Saved Messages.
 SNIPPET_CHARS = 400
