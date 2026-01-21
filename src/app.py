@@ -117,9 +117,6 @@ def main() -> None:
     logger = logging.getLogger(__name__)
 
     logger.info("Starting telescope")
-    logger.info(
-        "Debug tip: if a source is not matching, log event.chat_id and event.chat.username"
-    )
 
     storage = Storage(settings.DB_PATH)
     storage.init_db()
@@ -127,7 +124,9 @@ def main() -> None:
         removed = storage.cleanup_seen(settings.DEDUP_TTL_DAYS)
         logger.info("Dedup cleanup removed %s fingerprints", removed)
 
-    rules = build_rules(settings.RULES)
+    # Load rules from config.json so edits are quick.
+    rules = build_rules(settings.RULES_CONFIG)
+    logger.info('%s rules are loaded', len(rules))
 
     client = build_client()
     client.loop.run_until_complete(client.connect())
@@ -151,3 +150,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+#TODO добавить настройку для сканирования последних n сообщений в отслеживаемых чатах на случай пропуска
+#TODO добавить опциональную настройку под уведомления через telegram bot
+#TODO сд
+#TODO добавить поддержку мультигрупп

@@ -1,91 +1,70 @@
 """Static configuration for telescope.
 
-All sources and rules are hardcoded here to keep the MVP simple, transparent,
-and safe to restart. The design choice trades flexibility (no hot reloading or
-DB-backed config) for clarity and predictability.
+Sources and lightweight settings are loaded from JSON for quick edits without
+touching Python, while rules live in their own JSON file.
+
+Not recommended to edit dedup settings
 """
 
+import json
 import os
 
 # Where to store the SQLite database.
-# Keeping it next to the code makes the MVP self-contained and easy to locate.
 DB_PATH = os.path.join(os.path.dirname(__file__), "telescope.db")
 
-# Sources to monitor. Keys are normalized and MUST follow this rule:
-# - If a chat has a username, use "@<username>" in lowercase
-# - Otherwise use "chat_id:<event.chat_id>"
-# This lets us uniformly handle channels, groups, supergroups, and private chats.
-SOURCES = {
-    "chat_id:-1003530123436", # private chat or any chat without a username
-    "@testourbo", # public channel/group by username
-    "@tonprices",
-    "chat_id:-1001894159671",
-    "chat_id:-1003557190852"
-}
+# Sources and surface settings are loaded from config.json so users can
+# enable/disable chats, set aliases, and tweak dedup without editing code.
+CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
 
-# Optional aliases for chat_id sources. Keys are chat_id integers and values
-# should be short labels (no spaces) used in notifications.
-CHAT_ID_ALIASES = {
-    -1003530123436: "private_feed",
-    -1003557190852: "testTonCoin",
-    -1001894159671: "tumbaChat"
+# Rules are loaded from config.json to keep all settings in one place.
+def _load_json_config() -> dict:
+    """Load config.json with a flat, user-friendly schema."""
+
+    if not os.path.exists(CONFIG_PATH):
+        raise FileNotFoundError(f"Config file not found: {CONFIG_PATH}")
+
+    with open(CONFIG_PATH, "r", encoding="utf-8") as handle:
+        return json.load(handle)
 
 
-}
+def _normalize_sources(raw_sources: list[dict]) -> tuple[set[str], dict[str, str]]:
+    """Normalize sources and build an alias map keyed by source_key."""
+
+    sources: set[str] = set()
+    aliases: dict[str, str] = {}
+    for entry in raw_sources:
+        source_key = entry.get("source_key")
+        if not source_key:
+            continue
+        if not entry.get("enabled", True):
+            continue
+        sources.add(source_key)
+        alias = entry.get("alias")
+        if alias:
+            aliases[source_key] = alias
+    return sources, aliases
 
 
+_CONFIG = _load_json_config()
 
-# Rules define what counts as a match. Each rule can include:
-# - name: human-readable label for logging and notifications
-# - keywords: list of case-insensitive substrings (any match triggers)
-# - regex: optional list of regex patterns (any match triggers)
-# - exclude_keywords: optional list of case-insensitive substrings to negate
-RULES = [
-    {
-        "name": "Sosal detect",
-        "keywords": ["sosal", "сосал"],
-        "regex": [],
-        "exclude_keywords": []
-    }
-    ,{
-        "name": "Hiring",
-        "keywords": ["hiring", "we are hiring", "looking for"],
-        "regex": [r"\b(opening|role|position)\b"],
-        "exclude_keywords": ["not hiring", "no hiring"],
-    },
-    {
-        "name": "Funding",
-        "keywords": ["seed round", "series a", "series b"],
-        "regex": [r"\braised\s+\$?\d+"],
-        "exclude_keywords": [],
-    },
-    {
-        'name':'Manchester City',
-        'keywords':['Haaland','mc','england'],
-        'regex': [],
-        'exclude_keywords': ['проиграл', 'lose']
-    },
-    {
-        'name': 'Toncoin',
-        'keywords': ['$'],
-        'regex': [],
-        'exclude_keywords': []
-    },
-    {
-        'name': 'tumbatest',
-        'keywords': ['спокойной', 'ноч'],
-        'regex': [],
-        'exclude_keywords': []
-    }
-]
+# Expose the raw config for modules that need structured access.
+CONFIG = _CONFIG
+
+# Enabled sources are used for filtering in the pipeline.
+SOURCES, SOURCE_ALIASES = _normalize_sources(_CONFIG.get("sources", []))
 
 # Deduplication controls to reduce notification spam for repeated content.
 # - DEDUP_MODE: "off", "per_source", or "global"
 # - DEDUP_ONLY_ON_MATCH: only store fingerprints when a rule matched
 # - DEDUP_TTL_DAYS: cleanup horizon for fingerprints
-DEDUP_MODE = "per_source"
-DEDUP_ONLY_ON_MATCH = True
-DEDUP_TTL_DAYS = 3
+_dedup = _CONFIG.get("dedup", {})
+DEDUP_MODE = _dedup.get("mode", "per_source")
+DEDUP_ONLY_ON_MATCH = _dedup.get("only_on_match", True)
+DEDUP_TTL_DAYS = int(_dedup.get("ttl_days", 30))
 
 # Notification snippet size for Saved Messages.
-SNIPPET_CHARS = 400
+_notifications = _CONFIG.get("notifications", {})
+SNIPPET_CHARS = int(_notifications.get("snippet_chars", 400))
+
+# Rules are pulled directly from config.json, keeping them alongside sources.
+RULES_CONFIG = _CONFIG.get("rules", [])

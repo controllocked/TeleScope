@@ -1,0 +1,143 @@
+{
+  "sources": [
+    {
+      "source_key": "@itcom_kz",
+      "alias": "Job source #1",
+      "enabled": true
+    },
+    {
+      "source_key": "@huntmeinternship",
+      "alias": "internships channel",
+      "enabled": true
+    },
+    {
+      "source_key": "@devkz_jobs",
+      "alias": "dev vacancies in kz",
+      "enabled": true
+    },
+    {
+      "source_key": "@aitujobs",
+      "enabled": true
+    },
+    {
+      "source_key": "@zhumysbar",
+      "enabled": true
+    },
+    {
+      "source_key": "chat_id:-1001422661635",
+      "alias": "marketplace",
+      "enabled": true
+    },
+    {
+      "source_key": "chat_id:-4922994541",
+      "alias": "private group chat with boys",
+      "enabled": true
+    },
+    {
+      "source_key": "@telescope_test",
+      "alias": "Test channel",
+      "enabled": true
+    }
+  ],
+  "rules": [
+  {
+    "name": "Jobs - Junior/Intern (EN)",
+    "keywords": ["junior", "intern", "internship", "trainee", "entry level", "graduate"],
+    "regex": ["\\b(junior|intern(ship)?|trainee|entry[- ]level|graduate)\\b"],
+    "exclude_keywords": ["senior", "lead", "principal", "staff", "cto", "5+ years", "7+ years", "10+ years"],
+    "enabled": true
+  },
+  {
+    "name": "Jobs - Python Backend",
+    "keywords": ["python", "django", "fastapi", "flask", "backend"],
+    "regex": ["\\bpython\\b", "\\b(django|fastapi|flask)\\b"],
+    "exclude_keywords": ["php", "wordpress", "magento", "drupal"],
+    "enabled": true
+  },
+  {
+    "name": "Hiring - General (EN)",
+    "keywords": ["hiring", "we are hiring", "looking for", "join our team", "vacancy"],
+    "regex": ["\\b(opening|role|position|apply|cv|resume)\\b"],
+    "exclude_keywords": ["not hiring", "no hiring", "hiring freeze", "positions closed"],
+    "enabled": true
+  },
+  {
+    "name": "Jobs - RU (вакансия/ищем)",
+    "keywords": ["вакансия", "ищем", "требуется", "набираем", "работа", "отклик"],
+    "regex": ["\\b(ваканси(я|и)|ищем|требуется|набираем|отклик(и|нуться)?)\\b"],
+    "exclude_keywords": ["не ищем", "не нанимаем", "найм закрыт", "стоп найм"],
+    "enabled": true
+  },
+  {
+    "name": "Security - CVE / Vulnerability",
+    "keywords": ["vulnerability", "exploit", "patch", "rce", "0day", "zero-day"],
+    "regex": ["\\bCVE-\\d{4}-\\d+\\b", "\\b(RCE|XSS|SSRF|LFI|RFI)\\b"],
+    "exclude_keywords": ["cve-mock", "training only", "demo"],
+    "enabled": true
+  },
+  {
+    "name": "Security - Data breach / Leak (RU+EN)",
+    "keywords": ["breach", "leak", "leaked", "database leak", "слив", "утечк", "база данных", "компромет"],
+    "regex": ["\\b(breach|leak(ed)?)\\b", "\\b(утечк\\w*|слив\\w*|компромет\\w*)\\b"],
+    "exclude_keywords": ["fiction", "fanfic", "шутка", "meme"],
+    "enabled": false
+  },
+  {
+    "name": "Marketplace - Selling/Buying (RU)",
+    "keywords": ["продам", "куплю", "продаю", "обмен", "торг", "состояние", "доставка"],
+    "regex": ["\\b(продам|куплю|обмен(яю)?|торг)\\b"],
+    "exclude_keywords": ["продано", "sold", "не актуально", "закрыто"],
+    "enabled": true
+  },
+  {
+    "name": "Crypto - TON / Toncoin",
+    "keywords": ["ton", "toncoin", "the open network", "$ton", "wallet", "airdrop"],
+    "regex": ["\\bTON\\b", "\\$TON\\b", "\\b(airdrop|wallet|seed phrase)\\b"],
+    "exclude_keywords": ["testnet", "devnet", "scam", "fraud"],
+    "enabled": true
+  },
+  {
+    "name": "Payments - Refund / Chargeback",
+    "keywords": ["refund", "chargeback", "dispute", "reversal", "возврат", "чарджбек", "спор", "списали"],
+    "regex": ["\\b(refund|chargeback|dispute)\\b", "\\b(возврат\\w*|чарджбек\\w*|оспор\\w*)\\b"],
+    "exclude_keywords": ["no refund", "non-refundable", "без возврата"],
+    "enabled": true
+  },
+  {
+    "name": "Urgency / Deadline",
+    "keywords": ["urgent", "asap", "deadline", "today", "tomorrow", "срочно", "дедлайн", "сегодня", "завтра"],
+    "regex": ["\\b(urgent|asap|deadline)\\b", "\\b(срочно|дедлайн)\\b"],
+    "exclude_keywords": ["not urgent", "не срочно"],
+    "enabled": true
+  },
+  {
+    "name": "Scam / Phishing - Common Signals",
+    "keywords": ["seed phrase", "verify your account", "support team", "login link", "введите код", "подтвердите аккаунт", "служба поддержки"],
+    "regex": ["\\b(seed phrase|mnemonic)\\b", "\\bverify(\\s+your)?\\s+account\\b", "\\b(подтверд(и|ите)\\s+аккаунт|введите\\s+код)\\b"],
+    "exclude_keywords": ["official", "announcement", "pinned"],
+    "enabled": true
+  },
+  {
+    "name": "Moderation - Toxic Slurs (RU+EN)",
+    "keywords": ["идиот", "дебил", "moron", "stupid"],
+    "regex": ["\\b(idiot|moron|stupid)\\b", "\\b(дебил|идиот)\\b"],
+    "exclude_keywords": ["quote", "цитата", "meme", "шутка"],
+    "enabled": true
+  },
+  {
+    "name": "System/Infra - Outage / Incident",
+    "keywords": ["outage", "downtime", "incident", "degraded", "latency", "ошибка", "упало", "не работает"],
+    "regex": ["\\b(outage|downtime|incident)\\b", "\\b(упал[ао]?|лежит|не\\s+работает)\\b"],
+    "exclude_keywords": ["scheduled maintenance", "плановые работы"],
+    "enabled": true
+  }
+  ],
+  "dedup": {
+    "mode": "per_source",
+    "only_on_match": true,
+    "ttl_days": 3
+  },
+  "notifications": {
+    "snippet_chars": 400
+  }
+}

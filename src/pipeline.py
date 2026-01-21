@@ -57,31 +57,27 @@ def compute_fingerprint(source_key: str, normalized_text: str) -> Optional[str]:
 
 
 def source_key_from_message(message: Message) -> str:
-    """Normalize a source key using the single rule enforced across the app."""
+    """Normalize a source key using the single rule enforced across the app.
 
-    username = None
-    if message.chat and message.chat.username:
-        username = message.chat.username.lower()
+    Priority:
+    1. Public username (if resolvable and present)
+    2. chat_id fallback (always available)
+    """
 
-    if username:
-        return f"@{username}"
+    chat = getattr(message, "chat", None)
+    username = getattr(chat, "username", None)
 
+    if isinstance(username, str) and username:
+        return f"@{username.lower()}"
+
+    # Fallback: always stable and universal
     return f"chat_id:{message.chat_id}"
 
 
 def format_source_label(source_key: str) -> str:
-    """Return a human-friendly source label, using chat_id aliases if present."""
+    """Return a human-friendly source label, using configured aliases."""
 
-    if not source_key.startswith("chat_id:"):
-        return source_key
-
-    chat_id_raw = source_key.split("chat_id:", 1)[1]
-    try:
-        chat_id = int(chat_id_raw)
-    except ValueError:
-        return source_key
-
-    alias = settings.CHAT_ID_ALIASES.get(chat_id)
+    alias = settings.SOURCE_ALIASES.get(source_key)
     if not alias:
         return source_key
 
@@ -115,28 +111,42 @@ def build_context(message: Message) -> MessageContext:
 def _format_notification(match: RuleMatch, context: MessageContext, snippet: str) -> str:
     # Centralized formatting keeps notifications consistent and easy to adjust.
     # Telegram Markdown is supported by passing parse_mode="md" when sending.
+
     def escape_md(value: str) -> str:
         for ch in ("*", "`", "["):
             value = value.replace(ch, f"\\{ch}")
         return value
 
-    timestamp = context.date.astimezone().strftime("%H:%M:%S %Y-%m-%d").strip()
-    reason = escape_md(match.reason)
-    source = escape_md(format_source_label(context.source_key))
+    timestamp = context.date.astimezone().strftime("%H:%M:%S %d-%m-%Y").strip()
     rule_name = escape_md(match.rule_name)
+    source = escape_md(format_source_label(context.source_key))
+    reason = escape_md(match.reason)
     excerpt = escape_md(snippet)
+
+    divider = "──────────────"
 
     lines = [
         f"[{timestamp}]",
-        f"**Rule:** {rule_name}",
+        f"**Rule:**   {rule_name}",
         f"**Source:** {source}",
-        f"\n**Why matched:**\n{reason}",
-        "\n**Message excerpt:**",
+        divider,
+        "",
         excerpt,
+        "",
+        "**Why:**\n",
+        reason,
     ]
+
     if context.permalink:
-        lines.append(f"\n**Permalink:** {context.permalink}")
+        lines.extend([
+            "",
+            "**Link:**",
+            context.permalink,
+        ])
+
+    lines.append(divider)
     return "\n".join(lines)
+
 
 
 async def process_message(
@@ -148,13 +158,9 @@ async def process_message(
     """Run the strict processing pipeline for one incoming message."""
 
     context = build_context(message)
-
     # Fast exits keep hot paths cheap and reduce DB writes for irrelevant events.
     if context.source_key not in settings.SOURCES:
         return
-
-    # Media-only messages without captions are ignored because the MVP only
-    # matches on text. This avoids false positives on stickers or attachments.
     if not context.text.strip():
         return
 

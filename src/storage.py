@@ -24,7 +24,6 @@ class MessageContext:
     text: str
     permalink: Optional[str]
 
-
 @dataclass(frozen=True)
 class MatchRecord:
     """A single match result to persist to the database."""
@@ -114,60 +113,6 @@ class Storage:
                 )
                 """
             )
-            self._drop_matches_created_at(conn)
-
-    @staticmethod
-    def _drop_matches_created_at(conn: sqlite3.Connection) -> None:
-        columns = conn.execute("PRAGMA table_info(matches)").fetchall()
-        if not columns:
-            return
-        column_names = {row["name"] for row in columns}
-        if "created_at" not in column_names:
-            return
-
-        conn.execute(
-            """
-            CREATE TABLE matches_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                source_key TEXT,
-                chat_id INTEGER,
-                message_id INTEGER,
-                date TIMESTAMP,
-                rule_name TEXT,
-                reason TEXT,
-                text_snippet TEXT,
-                permalink TEXT
-            )
-            """
-        )
-        conn.execute(
-            """
-            INSERT INTO matches_new (
-                id,
-                source_key,
-                chat_id,
-                message_id,
-                date,
-                rule_name,
-                reason,
-                text_snippet,
-                permalink
-            )
-            SELECT
-                id,
-                source_key,
-                chat_id,
-                message_id,
-                date,
-                rule_name,
-                reason,
-                text_snippet,
-                permalink
-            FROM matches
-            """
-        )
-        conn.execute("DROP TABLE matches")
-        conn.execute("ALTER TABLE matches_new RENAME TO matches")
 
     def get_last_id(self, source_key: str) -> Optional[int]:
         """Return the last processed message_id for a source, if any."""

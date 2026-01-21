@@ -6,6 +6,7 @@ semantic search, or fuzzy matches) can be added without touching the pipeline.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 import re
 from typing import Iterable, List, Optional
@@ -43,6 +44,9 @@ def build_rules(rules_config: Iterable[dict]) -> List[Rule]:
 
     compiled: List[Rule] = []
     for rule in rules_config:
+        # Disabled rules are skipped without error to keep configuration simple.
+        if not rule.get("enabled", True):
+            continue
         keywords = [k.lower() for k in rule.get("keywords", [])]
         exclude_keywords = [k.lower() for k in rule.get("exclude_keywords", [])]
         raw_regex = rule.get("regex", []) or []
@@ -87,7 +91,7 @@ def match_rules(text: str, rules: Iterable[Rule]) -> List[RuleMatch]:
         if regex_hits:
             reason_parts.append(f"regex: {', '.join(sorted(set(regex_hits)))}")
 
-        reason = "; ".join(reason_parts)
+        reason = "\n".join(reason_parts)
         matches.append(RuleMatch(rule_name=rule.name, reason=reason))
 
     return matches
