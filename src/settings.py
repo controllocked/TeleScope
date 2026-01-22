@@ -64,9 +64,14 @@ DEDUP_TTL_DAYS = int(_dedup.get("ttl_days", 30))
 _notifications = _CONFIG.get("notifications", {})
 SNIPPET_CHARS = int(_notifications.get("snippet_chars", 400))
 # Notification method switches adapters without changing core logic.
-NOTIFICATION_METHOD = _CONFIG.get("notification_method", "saved_messages")
+NOTIFICATION_METHOD = _notifications.get("notification_method", "saved_messages")
 # Bot chat id is only required when notification_method=bot.
 BOT_CHAT_ID = _notifications.get("bot_chat_id")
+
+# Catch-up scan settings for startup backfill.
+_catch_up = _CONFIG.get("catch_up", {})
+CATCH_UP_ENABLED = bool(_catch_up.get("enabled", False))
+CATCH_UP_MESSAGES_PER_SOURCE = int(_catch_up.get("messages_per_source", 50))
 
 # Rules are pulled directly from config.json, keeping them alongside sources.
 RULES_CONFIG = _CONFIG.get("rules", [])

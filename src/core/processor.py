@@ -7,7 +7,7 @@ notifications, enabling future frontends or adapters without changes here.
 from __future__ import annotations
 
 import logging
-from typing import Iterable, Optional
+from typing import Iterable
 
 from core.config import DedupConfig
 from core.dedup import compute_fingerprint, normalize_for_fingerprint

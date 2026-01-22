@@ -1,5 +1,8 @@
 {
-  "notification_method": "saved_messages",
+  "catch_up": {
+    "enabled": true,
+    "messages_per_source": 50
+  },
   "sources": [
     {
       "source_key": "@itcom_kz",
@@ -139,6 +142,7 @@
     "ttl_days": 3
   },
   "notifications": {
+    "notification_method": "saved_messages",
     "snippet_chars": 400,
     "bot_chat_id": "1816083518"
   }

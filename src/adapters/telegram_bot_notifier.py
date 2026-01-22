@@ -8,9 +8,9 @@ from __future__ import annotations
 import json
 import urllib.request
 
-from src.adapters.notification_formatting import format_notification
-from src.core.models import MessageContext
-from src.core.rules_engine import RuleMatch
+from adapters.notification_formatting import format_notification
+from core.models import MessageContext
+from core.rules_engine import RuleMatch
 
 
 class TelegramBotNotifier:

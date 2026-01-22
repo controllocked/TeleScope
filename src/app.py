@@ -114,6 +114,77 @@ def _startup_menu(client) -> None:
             print("Invalid option. Please choose 1, 2, or 3.")
 
 
+class _CountingNotifier:
+    """Wrap a notifier to count matches during the catch-up scan."""
+
+    def __init__(self, wrapped) -> None:
+        self._wrapped = wrapped
+        self.matches_sent = 0
+
+    async def send(self, context, match, snippet) -> None:
+        self.matches_sent += 1
+        await self._wrapped.send(context, match, snippet)
+
+
+async def _catch_up_scan(
+    client,
+    storage: SQLiteStorage,
+    processor: MessageProcessor,
+    counting_notifier: _CountingNotifier,
+) -> None:
+    """Run a startup catch-up scan before registering real-time handlers."""
+
+    if not settings.CATCH_UP_ENABLED:
+        return
+
+    tracked_sources = storage.list_sources_state()
+    sources_to_scan = settings.SOURCES.intersection(tracked_sources)
+
+    if not sources_to_scan:
+        return
+
+    messages_checked = 0
+    matches_found = 0
+
+    for source_key in sources_to_scan:
+        last_id = storage.get_last_id(source_key) or 0
+        max_id_seen = last_id
+
+        try:
+            if source_key.startswith("@"):
+                entity = await client.get_entity(source_key)
+            else:
+                chat_id = int(source_key.split("chat_id:", 1)[1])
+                entity = await client.get_entity(chat_id)
+        except Exception:
+            logging.getLogger(__name__).exception("Failed to resolve source %s during catchup", source_key)
+            continue
+
+        messages = []
+        async for message in client.iter_messages(entity, limit=settings.CATCH_UP_MESSAGES_PER_SOURCE):
+            messages.append(message)
+
+        for message in reversed(messages):
+            if message.id <= last_id:
+                continue
+            messages_checked += 1
+            max_id_seen = max(max_id_seen, message.id)
+            context = build_context(message)
+            await processor.handle(context)
+
+        # Always update to the newest message id we touched to avoid repeats.
+        storage.set_last_id(source_key, max_id_seen)
+
+    matches_found = counting_notifier.matches_sent
+
+    logging.getLogger(__name__).info(
+        "Catch-up scan complete: sources=%s, messages=%s, matches=%s",
+        len(sources_to_scan),
+        messages_checked,
+        matches_found,
+    )
+
+
 def main() -> None:
     _configure_logging()
     logger = logging.getLogger(__name__)
@@ -156,6 +227,8 @@ def main() -> None:
         notifier = TelegramSavedMessagesNotifier(client, settings.SOURCE_ALIASES)
     else:
         raise RuntimeError("notification_method must be 'saved_messages' or 'bot'")
+    logger.info("Selected notification method - %s", settings.NOTIFICATION_METHOD)
+
     processor = MessageProcessor(
         rules=rules,
         storage=storage,
@@ -164,6 +237,24 @@ def main() -> None:
         dedup_config=dedup_config,
         snippet_chars=settings.SNIPPET_CHARS,
     )
+
+    # Run catch-up before wiring real-time handlers to avoid missing messages
+    # during a long scan and to keep history processing explicit.
+    catch_up_notifier = _CountingNotifier(notifier)
+    catch_up_processor = MessageProcessor(
+        rules=rules,
+        storage=storage,
+        notifier=catch_up_notifier,
+        allowed_sources=settings.SOURCES,
+        dedup_config=dedup_config,
+        snippet_chars=settings.SNIPPET_CHARS,
+    )
+    client.loop.run_until_complete(_catch_up_scan(
+        client,
+        storage,
+        catch_up_processor,
+        catch_up_notifier,
+    ))
 
     # Single handler keeps Telethon integration minimal and defers all filtering
     # to our core processor for consistency and testability.

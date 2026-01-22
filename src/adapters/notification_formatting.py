@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import html
 
-from src.core.models import MessageContext
-from src.core.rules_engine import RuleMatch
+from core.models import MessageContext
+from core.rules_engine import RuleMatch
 
 
 def format_source_label(source_key: str, source_aliases: dict[str, str]) -> str:

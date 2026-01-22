@@ -9,7 +9,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from core.models import MatchRecord, MessageContext
+from src.core.models import MatchRecord, MessageContext
 
 
 class SQLiteStorage:
@@ -173,3 +173,10 @@ class SQLiteStorage:
                 (cutoff.isoformat(),),
             )
             return cur.rowcount
+
+    def list_sources_state(self) -> set[str]:
+        """Return all source_key values currently tracked in sources_state."""
+
+        with self._connect() as conn:
+            rows = conn.execute("SELECT source_key FROM sources_state").fetchall()
+        return {row["source_key"] for row in rows}

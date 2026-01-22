@@ -8,7 +8,7 @@ from __future__ import annotations
 from telethon.tl.custom import Message
 from telethon.tl.types import PeerChannel, PeerChat
 
-from src.core.models import MessageContext
+from core.models import MessageContext
 
 
 def source_key_from_message(message: Message) -> str:
