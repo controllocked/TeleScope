@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
+import os
 
 from telethon import events
-
-from client import build_client
-from get_session import authorize
-from pipeline import process_message
-from rules import build_rules
-from storage import Storage
 import settings
-
+from adapters.sqlite_storage import SQLiteStorage
+from adapters.telegram_mapper import build_context
+from adapters.telegram_bot_notifier import TelegramBotNotifier
+from adapters.telegram_notifier import TelegramSavedMessagesNotifier
+from client import build_client
+from core.config import DedupConfig
+from core.processor import MessageProcessor
+from core.rules_engine import build_rules
+from get_session import authorize
 
 def _configure_logging() -> None:
     logging.basicConfig(
@@ -54,7 +56,7 @@ def _dialog_type(dialog) -> str:
 
 
 def _source_key_from_dialog(dialog) -> str:
-    # Use the same normalization rule as the pipeline: usernames use @,
+    # Use the same normalization rule as the core mapper: usernames use @,
     # otherwise fall back to chat_id:<id> for uniform handling.
     username = getattr(dialog.entity, "username", None)
     if username:
@@ -91,7 +93,7 @@ async def _list_archived_dialogs(client, only_without_username: bool = True) -> 
 def _startup_menu(client) -> None:
     # The menu exists to make chat_id discovery accessible to non-technical
     # users. By default we only show username-less archived dialogs because
-    # those are the ones that require chat_id references in settings.py, and we
+    # those are the ones that require chat_id references in config.json, and we
     # skip private chats to focus on group monitoring.
     while True:
         print("")
@@ -118,7 +120,7 @@ def main() -> None:
 
     logger.info("Starting telescope")
 
-    storage = Storage(settings.DB_PATH)
+    storage = SQLiteStorage(settings.DB_PATH)
     storage.init_db()
     if settings.DEDUP_MODE != "off":
         removed = storage.cleanup_seen(settings.DEDUP_TTL_DAYS)
@@ -126,18 +128,56 @@ def main() -> None:
 
     # Load rules from config.json so edits are quick.
     rules = build_rules(settings.RULES_CONFIG)
+    dedup_config = DedupConfig(
+        mode=settings.DEDUP_MODE,
+        only_on_match=settings.DEDUP_ONLY_ON_MATCH,
+        ttl_days=settings.DEDUP_TTL_DAYS,
+    )
     logger.info('%s rules are loaded', len(rules))
 
     client = build_client()
     client.loop.run_until_complete(client.connect())
     client.loop.run_until_complete(authorize(client))
 
+    # Select the notification adapter based on configuration to keep the core
+    # processor independent from delivery details.
+    if settings.NOTIFICATION_METHOD == "bot":
+        bot_token = os.getenv("BOT_API")
+        if not bot_token:
+            raise RuntimeError("BOT_API is required when notification_method=bot")
+        if not settings.BOT_CHAT_ID:
+            raise RuntimeError("notifications.bot_chat_id is required for bot notifications")
+        notifier = TelegramBotNotifier(
+            bot_token=bot_token,
+            chat_id=str(settings.BOT_CHAT_ID),
+            source_aliases=settings.SOURCE_ALIASES,
+        )
+    elif settings.NOTIFICATION_METHOD == "saved_messages":
+        notifier = TelegramSavedMessagesNotifier(client, settings.SOURCE_ALIASES)
+    else:
+        raise RuntimeError("notification_method must be 'saved_messages' or 'bot'")
+    processor = MessageProcessor(
+        rules=rules,
+        storage=storage,
+        notifier=notifier,
+        allowed_sources=settings.SOURCES,
+        dedup_config=dedup_config,
+        snippet_chars=settings.SNIPPET_CHARS,
+    )
+
     # Single handler keeps Telethon integration minimal and defers all filtering
-    # to our pipeline for consistency and testability.
+    # to our core processor for consistency and testability.
     @client.on(events.NewMessage(incoming=True))
     async def handler(event) -> None:
         try:
-            await process_message(storage, client, rules, event.message)
+            # When using bot notifications, ignore bot-sent messages to avoid
+            # loops or accidental processing of our own alerts.
+            if settings.NOTIFICATION_METHOD == "bot":
+                sender = await event.get_sender()
+                if event.is_private and sender and getattr(sender, "bot", False):
+                    return
+            context = build_context(event.message)
+            await processor.handle(context)
         except Exception:
             logger.exception("Error while processing message")
 
@@ -152,6 +192,5 @@ if __name__ == "__main__":
     main()
 
 #TODO добавить настройку для сканирования последних n сообщений в отслеживаемых чатах на случай пропуска
-#TODO добавить опциональную настройку под уведомления через telegram bot
 #TODO сд
 #TODO добавить поддержку мультигрупп

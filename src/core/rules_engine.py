@@ -1,24 +1,15 @@
-"""Rule compilation and matching logic.
-
-This module isolates matching behavior so future changes (e.g., stemming,
-semantic search, or fuzzy matches) can be added without touching the pipeline.
-"""
+"""Rule compilation and matching logic (core domain)."""
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 import re
-from typing import Iterable, List, Optional
+from typing import Iterable, List
 
 
 @dataclass(frozen=True)
 class Rule:
-    """Compiled rule used by the pipeline.
-
-    Precompiling regex patterns avoids repeated compilation per message and
-    keeps matching fast even with larger rule sets.
-    """
+    """Compiled rule used by the pipeline."""
 
     name: str
     keywords: List[str]
@@ -44,7 +35,6 @@ def build_rules(rules_config: Iterable[dict]) -> List[Rule]:
 
     compiled: List[Rule] = []
     for rule in rules_config:
-        # Disabled rules are skipped without error to keep configuration simple.
         if not rule.get("enabled", True):
             continue
         keywords = [k.lower() for k in rule.get("keywords", [])]

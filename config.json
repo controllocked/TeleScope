@@ -1,4 +1,5 @@
 {
+  "notification_method": "saved_messages",
   "sources": [
     {
       "source_key": "@itcom_kz",
@@ -138,6 +139,7 @@
     "ttl_days": 3
   },
   "notifications": {
-    "snippet_chars": 400
+    "snippet_chars": 400,
+    "bot_chat_id": "1816083518"
   }
 }

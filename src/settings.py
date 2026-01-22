@@ -1,9 +1,7 @@
 """Static configuration for telescope.
 
-Sources and lightweight settings are loaded from JSON for quick edits without
-touching Python, while rules live in their own JSON file.
-
-Not recommended to edit dedup settings
+All user-editable settings (sources, rules, dedup, notifications) live in a
+single JSON file for quick edits without touching Python.
 """
 
 import json
@@ -50,7 +48,7 @@ _CONFIG = _load_json_config()
 # Expose the raw config for modules that need structured access.
 CONFIG = _CONFIG
 
-# Enabled sources are used for filtering in the pipeline.
+# Enabled sources are used for filtering in the core processor.
 SOURCES, SOURCE_ALIASES = _normalize_sources(_CONFIG.get("sources", []))
 
 # Deduplication controls to reduce notification spam for repeated content.
@@ -62,9 +60,13 @@ DEDUP_MODE = _dedup.get("mode", "per_source")
 DEDUP_ONLY_ON_MATCH = _dedup.get("only_on_match", True)
 DEDUP_TTL_DAYS = int(_dedup.get("ttl_days", 30))
 
-# Notification snippet size for Saved Messages.
+# Notification snippet size used by all notifier adapters.
 _notifications = _CONFIG.get("notifications", {})
 SNIPPET_CHARS = int(_notifications.get("snippet_chars", 400))
+# Notification method switches adapters without changing core logic.
+NOTIFICATION_METHOD = _CONFIG.get("notification_method", "saved_messages")
+# Bot chat id is only required when notification_method=bot.
+BOT_CHAT_ID = _notifications.get("bot_chat_id")
 
 # Rules are pulled directly from config.json, keeping them alongside sources.
 RULES_CONFIG = _CONFIG.get("rules", [])

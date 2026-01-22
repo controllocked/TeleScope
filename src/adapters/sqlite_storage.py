@@ -1,45 +1,19 @@
-"""SQLite storage layer for telescope.
+"""SQLite storage adapter.
 
-We keep the storage logic minimal and explicit (no ORM) to reduce moving parts
-and make failure modes obvious. Each method opens its own connection to avoid
-global state and to remain robust across restarts.
+Implements the core StoragePort using a simple SQLite database.
 """
 
 from __future__ import annotations
 
 import sqlite3
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-
-@dataclass(frozen=True)
-class MessageContext:
-    """Minimal context captured from an incoming Telegram message."""
-
-    source_key: str
-    chat_id: int
-    message_id: int
-    date: datetime
-    text: str
-    permalink: Optional[str]
-
-@dataclass(frozen=True)
-class MatchRecord:
-    """A single match result to persist to the database."""
-
-    rule_name: str
-    reason: str
-    text_snippet: str
+from core.models import MatchRecord, MessageContext
 
 
-class Storage:
-    """Thin SQLite wrapper.
-
-    This class intentionally avoids long-lived connections because Telethon
-    can run for a long time; per-operation connections reduce the risk of
-    stale handles after system sleep or unexpected network events.
-    """
+class SQLiteStorage:
+    """Thin SQLite wrapper that satisfies the StoragePort contract."""
 
     def __init__(self, db_path: str) -> None:
         self._db_path = db_path
@@ -60,8 +34,7 @@ class Storage:
 
         with self._connect() as conn:
             # sources_state keeps a single counter per source so we can safely
-            # restart the app without reprocessing old messages. Storing only
-            # the last id keeps the table compact and updates cheap.
+            # restart the app without reprocessing old messages.
             # Fields:
             # - source_key: normalized key (PRIMARY KEY)
             # - last_message_id: highest message id processed for that source
@@ -97,7 +70,7 @@ class Storage:
             # - rule_name: name of the rule that matched
             # - reason: human-readable match explanation (keywords/regex)
             # - text_snippet: clipped portion of the message text
-            # - permalink: t.me link when public usernames exist
+            # - permalink: t.me link
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS matches (
@@ -163,6 +136,7 @@ class Storage:
     def save_match(self, context: MessageContext, match: MatchRecord) -> None:
         """Persist a match to the append-only matches table."""
 
+        created_at = datetime.now(timezone.utc)
         with self._connect() as conn:
             conn.execute(
                 """
@@ -185,7 +159,7 @@ class Storage:
                     match.rule_name,
                     match.reason,
                     match.text_snippet,
-                    context.permalink,
+                    context.permalink
                 ),
             )
 
