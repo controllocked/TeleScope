@@ -1,10 +1,11 @@
 """Application entry point for the telescope watcher."""
 
 from __future__ import annotations
-
+import random
 import logging
 import os
 
+from art import tprint
 from telethon import events
 import settings
 from adapters.sqlite_storage import SQLiteStorage
@@ -17,6 +18,8 @@ from core.processor import MessageProcessor
 from core.rules_engine import build_rules
 from get_session import authorize
 
+NAME = "TELESCOPE"
+FONT = "tarty-1"
 def _configure_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
@@ -95,23 +98,26 @@ def _startup_menu(client) -> None:
     # users. By default we only show username-less archived dialogs because
     # those are the ones that require chat_id references in config.json, and we
     # skip private chats to focus on group monitoring.
-    while True:
-        print("")
-        print("telescope startup menu")
-        print("1) List archived group chats without usernames (chat_id discovery)")
-        print("2) Start watcher")
-        print("3) Exit")
-        choice = input("Select an option: ").strip()
+    try:
+        while True:
+            tprint(NAME, FONT, space=1)
+            print("[1] List archived group chats without usernames (chat_id discovery)")
+            print("[2] Start watcher")
+            print("[3] Exit")
+            print("\nSelect an option: ")
+            choice = input("telescope> ").strip()
 
-        if choice == "1":
-            client.loop.run_until_complete(_list_archived_dialogs(client, True))
-            input("Press Enter to return to the menu...")
-        elif choice == "2":
-            return
-        elif choice == "3":
-            raise SystemExit(0)
-        else:
-            print("Invalid option. Please choose 1, 2, or 3.")
+            if choice == "1":
+                client.loop.run_until_complete(_list_archived_dialogs(client, True))
+                input("Press Enter to return to the menu...")
+            elif choice == "2":
+                return
+            elif choice == "3":
+                raise SystemExit(0)
+            else:
+                print("Invalid option. Please choose 1, 2, or 3.")
+    except KeyboardInterrupt:
+        exit(0)
 
 
 class _CountingNotifier:
@@ -282,6 +288,9 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
-#TODO добавить настройку для сканирования последних n сообщений в отслеживаемых чатах на случай пропуска
-#TODO сд
-#TODO добавить поддержку мультигрупп
+#TODO добавить тесты pytest
+#TODO ?сделать отдельную опцию в меню catchup вместо автоматического включения. В конфиге больше такой опции включения не будет, кроме количества сообщений.
+#TODO добавить возможность логирования в файл
+#TODO прикрутить нейронку для создания правил
+
+

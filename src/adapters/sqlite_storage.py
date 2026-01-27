@@ -9,7 +9,7 @@ import sqlite3
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from src.core.models import MatchRecord, MessageContext
+from core.models import MatchRecord, MessageContext
 
 
 class SQLiteStorage:

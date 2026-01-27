@@ -12,6 +12,13 @@ watcher built on Telethon, not a bot.
 - Notifies your Saved Messages with a compact snippet
 - Avoids repeats via message-level idempotency and optional deduplication
 
+## Architecture (for growth)
+The project is split into three explicit layers to keep the core logic reusable:
+- `src/core`: domain logic (rules engine, dedup, message processing) with no Telegram or SQLite code.
+- `src/adapters`: integration layers (Telegram mapping/notifications and SQLite storage).
+- `src/app.py`: application layer (CLI menu, wiring, and lifecycle).
+This separation keeps the core stable while letting you add new frontends or adapters later.
+
 ## Install
 ```bash
 python -m venv .venv
@@ -26,14 +33,17 @@ cp .env.example .env
 ```
 2) Fill in `API_ID` and `API_HASH` from https://my.telegram.org.
 
-3) Edit sources and rules in `src/settings.py`:
-- `SOURCES` is a set of normalized keys:
+3) Edit sources and rules in `config.json`:
+- `config.json` uses a flat structure:
+  - `sources`: list of objects with `source_key`, optional `alias`, and `enabled`
+  - `rules`: list of objects with `name`, `keywords`, optional `regex`, optional `exclude_keywords`, and `enabled`
+  - `notification_method`: `saved_messages` (default) or `bot`
+  - `catch_up`: startup scan settings (`enabled`, `messages_per_source`)
+  - `dedup`: `mode`, `only_on_match`, `ttl_days`
+  - `notifications`: `snippet_chars`, `bot_chat_id`
+- `source_key` format:
   - public usernames: `"@channel_or_group"` (lowercase)
   - any chat by id: `"chat_id:<event.chat_id>"`
-- `CHAT_ID_ALIASES` is an optional dict for chat_id labels shown in notifications:
-  - use chat ids as ints: `-1001234567890`
-  - values should be short, no-spaces labels like `"team_feed"`
-- `RULES` are dicts with `name`, `keywords`, optional `regex`, optional `exclude_keywords`.
 
 ## Run
 ```bash
@@ -57,23 +67,28 @@ Optional env overrides:
 - `PHONE=+1234567890` to prefill the phone login.
 - `2FA=your_password` if your account has a password set.
 
+## Bot notifications (optional)
+If you set `notification_method` to `bot` in `config.json`, telescope will send
+notifications through the Bot API instead of Saved Messages.
+- Set `BOT_API` in `.env` to your bot token.
+- Set `notifications.bot_chat_id` in `config.json` to the target chat id.
+- Bot notifications use HTML parse mode for reliability (no Markdown errors).
+
 At startup you'll see a simple menu. The default option lists **archived**
 group chats without usernames to help you discover `chat_id` values to paste
-into `SOURCES` in `src/settings.py`. Telescope never auto-adds chats.
+into `config.json`. Telescope never auto-adds chats.
 
-## Debug tip
-If filtering by source fails, temporarily log `event.chat_id` and
-`event.chat.username` inside the handler in `src/app.py` to
-discover the correct identifier to add to `SOURCES`.
+If `catch_up.enabled` is true, telescope will scan the last N messages for any
+sources already present in `sources_state` before real-time monitoring begins.
+
 
 ## Limitations
 - Only new messages after start are seen; history is not backfilled.
 - You must have access to the monitored chats for messages to be delivered.
 - Permalinks may be `None` for private chats or chats without usernames.
+- Currently, doesn't work with nested groups
 
 ## Next steps (beyond MVP)
 - Implement alert system
-- Config file or DB-backed rules for easier updates without code changes.
-- A lightweight scheduler for periodic dedup cleanup.
-- Richer rule logic (per-rule severity, AND/OR groups, or phrase proximity).
-- Message exporting or web UI for browsing match history.
+- Добавить поддержку мониторинга мульти групп
+- TUI

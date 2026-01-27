@@ -1,6 +1,6 @@
 {
   "catch_up": {
-    "enabled": true,
+    "enabled": false,
     "messages_per_source": 50
   },
   "sources": [
