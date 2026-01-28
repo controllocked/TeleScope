@@ -1,4 +1,4 @@
-# telescope
+ ![logo](logo.png)
 
 A clean Telegram rule-based engine that listens to new incoming messages from a hardcoded list of sources, applies simple content rules, stores matches in SQLite, and notifies you. This is a user-session watcher built on Telethon, not a bot.
 ## What it does
@@ -7,6 +7,10 @@ A clean Telegram rule-based engine that listens to new incoming messages from a 
 - Stores match metadata in SQLite for traceability
 - Notifies your Saved Messages with a compact snippet
 - Avoids repeats via message-level idempotency and optional deduplication
+
+## Who is this for
+
+Telescope is intended for developers, analysts, and power users who want to monitor Telegram at scale using custom rules, without relying on bots or third-party services.
 
 ## Architecture (for growth)
 The project is split into three explicit layers to keep the core logic reusable:
@@ -115,15 +119,6 @@ into `config.json`. Telescope never auto-adds chats.
 If `catch_up.enabled` is true, telescope will scan the last N messages for any
 sources already present in `sources_state` before real-time monitoring begins.
 
-
-## Limitations
-- Only new messages after start are seen; history is not backfilled.
-- You must have access to the monitored chats for messages to be delivered.
-- Permalinks may be `None` for private chats or chats without usernames.
-- Currently, doesn't work with nested groups
-- Forum topics: messages in the "General" topic are not flagged by Telegram as forum topics,
-  so they are treated like regular chat messages. Use the base key to monitor the whole chat
-  (including General); topic-specific keys only capture the chosen topic.
 
 ## Next steps (beyond MVP)
 - TUI
