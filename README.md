@@ -1,10 +1,6 @@
 # telescope
 
-A clean, minimal Telegram watcher that listens to new incoming messages from a
-hardcoded list of sources, applies simple content rules, stores matches in
-SQLite, and notifies your Saved Messages ("me"). This is a **user-session**
-watcher built on Telethon, not a bot.
-
+A clean Telegram rule-based engine that listens to new incoming messages from a hardcoded list of sources, applies simple content rules, stores matches in SQLite, and notifies you. This is a user-session watcher built on Telethon, not a bot.
 ## What it does
 - Monitors incoming messages for the configured sources
 - Applies keyword/regex rules with optional excludes
@@ -130,6 +126,4 @@ sources already present in `sources_state` before real-time monitoring begins.
   (including General); topic-specific keys only capture the chosen topic.
 
 ## Next steps (beyond MVP)
-- Implement alert system
-- Добавить поддержку мониторинга мульти групп
 - TUI

@@ -1,6 +1,6 @@
 {
   "catch_up": {
-    "enabled": false,
+    "enabled": true,
     "messages_per_source": 50
   },
   "sources": [
@@ -43,8 +43,13 @@
       "enabled": true
     },
     {
-      "source_key": "chat_id:3862668028#topic:2",
-      "alias": "Topic test",
+      "source_key": "@kapdfadfa",
+      "alias": "Test channel 2",
+      "enabled": true
+    },
+    {
+      "source_key": "@fdsfsafsfd",
+      "alias": "Test group 2",
       "enabled": true
     }
   ],
@@ -147,7 +152,7 @@
     "ttl_days": 3
   },
   "notifications": {
-    "notification_method": "saved_messages",
+    "notification_method": "bot",
     "snippet_chars": 400,
     "bot_chat_id": "1816083518"
   },
