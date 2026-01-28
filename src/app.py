@@ -6,16 +6,17 @@ import logging
 import os
 
 from art import tprint
-from telethon import events
+from telethon import events, utils
 import settings
 from adapters.sqlite_storage import SQLiteStorage
-from adapters.telegram_mapper import build_context
+from adapters.telegram_mapper import ForumResolver, build_context
 from adapters.telegram_bot_notifier import TelegramBotNotifier
 from adapters.telegram_notifier import TelegramSavedMessagesNotifier
 from client import build_client
 from core.config import DedupConfig
 from core.processor import MessageProcessor
 from core.rules_engine import build_rules
+from core.source_keys import split_source_key
 from get_session import authorize
 
 NAME = "TELESCOPE"
@@ -64,7 +65,7 @@ def _source_key_from_dialog(dialog) -> str:
     username = getattr(dialog.entity, "username", None)
     if username:
         return f"@{username.lower()}"
-    return f"chat_id:{dialog.id}"
+    return f"chat_id:{utils.get_peer_id(dialog.entity)}"
 
 
 async def _list_archived_dialogs(client, only_without_username: bool = True) -> None:
@@ -137,6 +138,7 @@ async def _catch_up_scan(
     storage: SQLiteStorage,
     processor: MessageProcessor,
     counting_notifier: _CountingNotifier,
+    forum_resolver: ForumResolver,
 ) -> None:
     """Run a startup catch-up scan before registering real-time handlers."""
 
@@ -144,7 +146,12 @@ async def _catch_up_scan(
         return
 
     tracked_sources = storage.list_sources_state()
-    sources_to_scan = settings.SOURCES.intersection(tracked_sources)
+    tracked_bases = {split_source_key(key)[0] for key in tracked_sources}
+    sources_to_scan: set[str] = set()
+    for source_key in settings.SOURCES:
+        base_key, _ = split_source_key(source_key)
+        if base_key in tracked_bases:
+            sources_to_scan.add(base_key)
 
     if not sources_to_scan:
         return
@@ -153,9 +160,7 @@ async def _catch_up_scan(
     matches_found = 0
 
     for source_key in sources_to_scan:
-        last_id = storage.get_last_id(source_key) or 0
-        max_id_seen = last_id
-
+        max_id_seen = 0
         try:
             if source_key.startswith("@"):
                 entity = await client.get_entity(source_key)
@@ -171,15 +176,15 @@ async def _catch_up_scan(
             messages.append(message)
 
         for message in reversed(messages):
-            if message.id <= last_id:
-                continue
             messages_checked += 1
             max_id_seen = max(max_id_seen, message.id)
-            context = build_context(message)
+            context = await build_context(message, forum_resolver)
             await processor.handle(context)
 
         # Always update to the newest message id we touched to avoid repeats.
-        storage.set_last_id(source_key, max_id_seen)
+        # We keep a base-key marker to unblock catch-up on future restarts.
+        if max_id_seen:
+            storage.set_last_id(source_key, max_id_seen)
 
     matches_found = counting_notifier.matches_sent
 
@@ -255,11 +260,13 @@ def main() -> None:
         dedup_config=dedup_config,
         snippet_chars=settings.SNIPPET_CHARS,
     )
+    forum_resolver = ForumResolver(client)
     client.loop.run_until_complete(_catch_up_scan(
         client,
         storage,
         catch_up_processor,
         catch_up_notifier,
+        forum_resolver,
     ))
 
     # Single handler keeps Telethon integration minimal and defers all filtering
@@ -273,7 +280,7 @@ def main() -> None:
                 sender = await event.get_sender()
                 if event.is_private and sender and getattr(sender, "bot", False):
                     return
-            context = build_context(event.message)
+            context = await build_context(event.message, forum_resolver)
             await processor.handle(context)
         except Exception:
             logger.exception("Error while processing message")
@@ -292,5 +299,3 @@ if __name__ == "__main__":
 #TODO ?сделать отдельную опцию в меню catchup вместо автоматического включения. В конфиге больше такой опции включения не будет, кроме количества сообщений.
 #TODO добавить возможность логирования в файл
 #TODO прикрутить нейронку для создания правил
-
-

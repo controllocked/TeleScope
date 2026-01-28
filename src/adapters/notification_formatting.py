@@ -12,13 +12,31 @@ from core.models import MessageContext
 from core.rules_engine import RuleMatch
 
 
-def format_source_label(source_key: str, source_aliases: dict[str, str]) -> str:
+def format_source_label(context: MessageContext, source_aliases: dict[str, str]) -> str:
     """Return a human-friendly source label, using configured aliases."""
 
-    alias = source_aliases.get(source_key)
-    if not alias:
-        return source_key
-    return f"{alias} ({source_key})"
+    base_key = context.base_source_key
+    effective_key = context.source_key
+    topic_id = context.topic_id
+
+    if topic_id is None:
+        alias = source_aliases.get(base_key) or source_aliases.get(effective_key)
+        if not alias:
+            return base_key
+        return f"{alias} ({base_key})"
+
+    base_alias = source_aliases.get(base_key)
+    topic_alias = source_aliases.get(effective_key)
+    base_label = base_alias or base_key
+
+    if topic_alias:
+        label = f"{base_label} / {topic_alias}"
+    else:
+        label = f"{base_label} / topic {topic_id}"
+
+    if base_alias or topic_alias:
+        return f"{label} ({effective_key})"
+    return label
 
 
 def _format_markdown(
@@ -38,7 +56,7 @@ def _format_markdown(
 
     timestamp = context.date.astimezone().strftime("%H:%M:%S %d-%m-%Y").strip()
     rule_name = escape_md(match.rule_name)
-    source = escape_md(format_source_label(context.source_key, source_aliases))
+    source = escape_md(format_source_label(context, source_aliases))
     reason = escape_md(match.reason)
     excerpt = escape_md(snippet)
 
@@ -57,11 +75,9 @@ def _format_markdown(
     ]
 
     if context.permalink:
-        lines.extend([
-            "",
-            "**Link:**",
-            context.permalink,
-        ])
+        lines.extend(["", "**Link:**", context.permalink])
+        if context.topic_permalink and context.topic_permalink != context.permalink:
+            lines.extend(["", "**Topic:**", context.topic_permalink])
 
     lines.append(divider)
     return "\n".join(lines)
@@ -77,7 +93,7 @@ def _format_html(
 
     timestamp = html.escape(context.date.astimezone().strftime("%H:%M:%S %d-%m-%Y").strip())
     rule_name = html.escape(match.rule_name)
-    source = html.escape(format_source_label(context.source_key, source_aliases))
+    source = html.escape(format_source_label(context, source_aliases))
     reason = html.escape(match.reason)
     excerpt = html.escape(snippet)
 
@@ -96,6 +112,9 @@ def _format_html(
     if context.permalink:
         safe_link = html.escape(context.permalink)
         parts.extend(["", "<b>Link:</b>", f"<a href=\"{safe_link}\">{safe_link}</a>"])
+        if context.topic_permalink and context.topic_permalink != context.permalink:
+            safe_topic = html.escape(context.topic_permalink)
+            parts.extend(["", "<b>Topic:</b>", f"<a href=\"{safe_topic}\">{safe_topic}</a>"])
 
     parts.append("──────────────")
     return "\n".join(parts)

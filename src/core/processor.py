@@ -40,7 +40,11 @@ class MessageProcessor:
     async def handle(self, context: MessageContext) -> None:
         """Process one message context through the core pipeline."""
 
-        if context.source_key not in self._allowed_sources:
+        if context.source_key in self._allowed_sources:
+            pass
+        elif context.base_source_key in self._allowed_sources:
+            pass
+        else:
             return
 
         # Media-only messages without captions are ignored

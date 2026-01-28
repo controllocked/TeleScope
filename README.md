@@ -44,6 +44,18 @@ cp .env.example .env
 - `source_key` format:
   - public usernames: `"@channel_or_group"` (lowercase)
   - any chat by id: `"chat_id:<event.chat_id>"`
+  - optional forum topic suffix: `"#topic:<topic_id>"` to monitor a single topic
+
+Examples:
+- `"@engineering"`
+- `"@engineering#topic:12345"` (single forum topic)
+- `"chat_id:123456789#topic:98765"`
+
+For private groups/supergroups you may see `chat_id:-100...` values; telescope accepts both
+the raw `chat_id` and the `-100`-prefixed form.
+
+Aliases can be attached to either the base key or a topic-specific key. If you
+set a topic alias, notifications will show `base / topic` for clarity.
 
 ## Run
 ```bash
@@ -87,6 +99,9 @@ sources already present in `sources_state` before real-time monitoring begins.
 - You must have access to the monitored chats for messages to be delivered.
 - Permalinks may be `None` for private chats or chats without usernames.
 - Currently, doesn't work with nested groups
+- Forum topics: messages in the "General" topic are not flagged by Telegram as forum topics,
+  so they are treated like regular chat messages. Use the base key to monitor the whole chat
+  (including General); topic-specific keys only capture the chosen topic.
 
 ## Next steps (beyond MVP)
 - Implement alert system

@@ -41,6 +41,11 @@
       "source_key": "@telescope_test",
       "alias": "Test channel",
       "enabled": true
+    },
+    {
+      "source_key": "chat_id:3862668028#topic:2",
+      "alias": "Topic test",
+      "enabled": true
     }
   ],
   "rules": [

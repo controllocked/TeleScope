@@ -7,6 +7,8 @@ single JSON file for quick edits without touching Python.
 import json
 import os
 
+from core.source_keys import expand_source_key_variants
+
 # Where to store the SQLite database.
 DB_PATH = os.path.join(os.path.dirname(__file__), "telescope.db")
 
@@ -36,10 +38,17 @@ def _normalize_sources(raw_sources: list[dict]) -> tuple[set[str], dict[str, str
             continue
         if not entry.get("enabled", True):
             continue
-        sources.add(source_key)
+        expanded_keys = expand_source_key_variants(source_key)
+        sources.update(expanded_keys)
         alias = entry.get("alias")
         if alias:
+            # Preserve explicit aliases for the configured key.
             aliases[source_key] = alias
+            # Mirror aliases onto equivalent chat_id forms to avoid mismatches.
+            for key in expanded_keys:
+                if key == source_key:
+                    continue
+                aliases.setdefault(key, alias)
     return sources, aliases
 
 

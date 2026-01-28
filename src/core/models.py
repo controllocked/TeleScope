@@ -16,11 +16,14 @@ class MessageContext:
     """Minimal message context used by the core processing pipeline."""
 
     source_key: str
+    base_source_key: str
+    topic_id: Optional[int]
     chat_id: int
     message_id: int
     date: datetime
     text: str
     permalink: Optional[str]
+    topic_permalink: Optional[str]
 
 
 @dataclass(frozen=True)
