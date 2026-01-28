@@ -24,6 +24,7 @@ This separation keeps the core stable while letting you add new frontends or ada
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Configure
@@ -41,6 +42,7 @@ cp .env.example .env
   - `catch_up`: startup scan settings (`enabled`, `messages_per_source`)
   - `dedup`: `mode`, `only_on_match`, `ttl_days`
   - `notifications`: `snippet_chars`, `bot_chat_id`
+  - `logging`: enable console/file logs, rotation, and redaction
 - `source_key` format:
   - public usernames: `"@channel_or_group"` (lowercase)
   - any chat by id: `"chat_id:<event.chat_id>"`
@@ -57,9 +59,33 @@ the raw `chat_id` and the `-100`-prefixed form.
 Aliases can be attached to either the base key or a topic-specific key. If you
 set a topic alias, notifications will show `base / topic` for clarity.
 
+Logging (optional) example:
+```json
+"logging": {
+  "enabled": true,
+  "level": "INFO",
+  "console": true,
+  "file": {
+    "enabled": true,
+    "path": "logs/telescope.log",
+    "max_bytes": 5242880,
+    "backup_count": 5
+  },
+  "redact": {
+    "enabled": true,
+    "patterns": ["API_ID", "API_HASH", "BOT_API", "PHONE", "2FA"]
+  }
+}
+```
+
 ## Run
 ```bash
-python src/app.py
+telescope run
+```
+
+Setup (placeholder):
+```bash
+telescope setup
 ```
 
 ## Session login

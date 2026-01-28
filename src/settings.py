@@ -9,12 +9,14 @@ import os
 
 from core.source_keys import expand_source_key_variants
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 # Where to store the SQLite database.
 DB_PATH = os.path.join(os.path.dirname(__file__), "telescope.db")
 
 # Sources and surface settings are loaded from config.json so users can
 # enable/disable chats, set aliases, and tweak dedup without editing code.
-CONFIG_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config.json"))
+CONFIG_PATH = os.path.join(PROJECT_ROOT, "config.json")
 
 # Rules are loaded from config.json to keep all settings in one place.
 def _load_json_config() -> dict:
@@ -84,3 +86,6 @@ CATCH_UP_MESSAGES_PER_SOURCE = int(_catch_up.get("messages_per_source", 50))
 
 # Rules are pulled directly from config.json, keeping them alongside sources.
 RULES_CONFIG = _CONFIG.get("rules", [])
+
+# Logging configuration (optional).
+LOGGING = _CONFIG.get("logging", {})

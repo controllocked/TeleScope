@@ -28,3 +28,8 @@ ENV/
 
 # macOS
 .DS_Store
+
+
+# Logs
+*.log
+logs

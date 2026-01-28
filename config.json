@@ -150,5 +150,20 @@
     "notification_method": "saved_messages",
     "snippet_chars": 400,
     "bot_chat_id": "1816083518"
+  },
+  "logging": {
+    "enabled": true,
+    "level": "INFO",
+    "console": true,
+    "file": {
+      "enabled": true,
+      "path": "logs/telescope.log",
+      "max_bytes": 5242880,
+      "backup_count": 5
+    },
+    "redact": {
+      "enabled": true,
+      "patterns": ["API_ID", "API_HASH", "BOT_API", "PHONE", "2FA"]
+    }
   }
 }

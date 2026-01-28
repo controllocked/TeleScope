@@ -2,6 +2,8 @@
 
 
 import asyncio
+import logging
+
 from dotenv import load_dotenv
 from getpass import getpass
 import os
@@ -50,10 +52,11 @@ def _pick_login_method() -> str:
     while True:
         print("")
         print("Login methods:")
-        print("1) QR code")
-        print("2) Phone code")
-        print("3) Exit")
-        choice = input("Select a login method: ").strip()
+        print("[1] QR code")
+        print("[2] Phone code")
+        print("[3] Exit")
+        print("Select a login method: \n")
+        choice = input("telescope > ").strip()
         if choice == '1':
             return "qr"
         elif choice == '2':
@@ -84,7 +87,7 @@ async def main() -> None:
     await authorize(client)
 
     me = await client.get_me()
-    print(f"Logged in as: {me.first_name}")
+    logging.info(f"Logged in as: {me.first_name}")
 
     await client.disconnect()
 

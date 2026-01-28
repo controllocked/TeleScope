@@ -1,12 +1,16 @@
 """Application entry point for the telescope watcher."""
 
 from __future__ import annotations
-import random
+
+import argparse
 import logging
 import os
+from logging.handlers import RotatingFileHandler
+from typing import Optional
 
 from art import tprint
-from telethon import events, utils
+from dotenv import load_dotenv
+from telethon import events
 import settings
 from adapters.sqlite_storage import SQLiteStorage
 from adapters.telegram_mapper import ForumResolver, build_context
@@ -21,104 +25,81 @@ from get_session import authorize
 
 NAME = "TELESCOPE"
 FONT = "tarty-1"
+
+
+def _print_banner() -> None:
+    tprint(NAME, FONT, space=1)
+class _RedactingFormatter(logging.Formatter):
+    def __init__(self, secrets: list[str], fmt: str, datefmt: Optional[str] = None) -> None:
+        super().__init__(fmt=fmt, datefmt=datefmt)
+        self._secrets = [secret for secret in secrets if secret]
+
+    def format(self, record: logging.LogRecord) -> str:
+        message = super().format(record)
+        for secret in self._secrets:
+            message = message.replace(secret, "***")
+        return message
+
+
+def _collect_redaction_values(config: dict) -> list[str]:
+    redact_cfg = config.get("redact", {}) if config else {}
+    if not redact_cfg.get("enabled", False):
+        return []
+    values = []
+    for name in redact_cfg.get("patterns", []):
+        value = os.getenv(name)
+        if value:
+            values.append(value)
+    return sorted(set(values), key=len, reverse=True)
+
+
 def _configure_logging() -> None:
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
-
-
-def _dialog_title(dialog) -> str:
-    # Dialog names can be missing or partial depending on entity type. We pick
-    # the best available label to keep the discovery output usable.
-    if dialog.name:
-        return dialog.name
-
-    entity = dialog.entity
-    first = getattr(entity, "first_name", "") or ""
-    last = getattr(entity, "last_name", "") or ""
-    full = f"{first} {last}".strip()
-    if full:
-        return full
-
-    username = getattr(entity, "username", None)
-    if username:
-        return username
-
-    return "Unknown"
-
-
-def _dialog_type(dialog) -> str:
-    # We keep a small set of types to match the user's mental model.
-    if dialog.is_channel:
-        if getattr(dialog.entity, "megagroup", False):
-            return "supergroup"
-        return "channel"
-    if dialog.is_group:
-        return "group"
-    return "unknown"
-
-
-def _source_key_from_dialog(dialog) -> str:
-    # Use the same normalization rule as the core mapper: usernames use @,
-    # otherwise fall back to chat_id:<id> for uniform handling.
-    username = getattr(dialog.entity, "username", None)
-    if username:
-        return f"@{username.lower()}"
-    return f"chat_id:{utils.get_peer_id(dialog.entity)}"
-
-
-async def _list_archived_dialogs(client, only_without_username: bool = True) -> None:
-    # Archived dialogs are a user-curated list, making them ideal for discovery
-    # without requiring commands, forwarding, or log inspection.
-    dialogs = []
-    async for dialog in client.iter_dialogs(archived=True, folder=1):
-        username = getattr(dialog.entity, "username", None)
-        # Username-less chats require chat_id:<id>, so we filter to them by
-        # default to reduce noise and make copy-paste decisions obvious.
-        if only_without_username and username:
-            continue
-        # Skip private 1:1 chats; the discovery menu focuses on group contexts.
-        if dialog.is_user:
-            continue
-        dialogs.append(dialog)
-
-    if not dialogs:
-        print("No archived dialogs match the current filter.")
+    config = settings.LOGGING or {}
+    if not config.get("enabled", False):
         return
 
-    for index, dialog in enumerate(dialogs, start=1):
-        dialog_type = _dialog_type(dialog)
-        title = _dialog_title(dialog)
-        source_key = _source_key_from_dialog(dialog)
-        print(f"{index}. {dialog_type} | {title} | {source_key}")
+    load_dotenv()
+    level_name = str(config.get("level", "INFO")).upper()
+    level = getattr(logging, level_name, logging.INFO)
 
+    fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    datefmt = "%Y-%m-%d %H:%M:%S"
+    secrets = _collect_redaction_values(config)
+    formatter = _RedactingFormatter(secrets, fmt=fmt, datefmt=datefmt)
 
-def _startup_menu(client) -> None:
-    # The menu exists to make chat_id discovery accessible to non-technical
-    # users. By default we only show username-less archived dialogs because
-    # those are the ones that require chat_id references in config.json, and we
-    # skip private chats to focus on group monitoring.
-    try:
-        while True:
-            tprint(NAME, FONT, space=1)
-            print("[1] List archived group chats without usernames (chat_id discovery)")
-            print("[2] Start watcher")
-            print("[3] Exit")
-            print("\nSelect an option: ")
-            choice = input("telescope> ").strip()
+    handlers: list[logging.Handler] = []
 
-            if choice == "1":
-                client.loop.run_until_complete(_list_archived_dialogs(client, True))
-                input("Press Enter to return to the menu...")
-            elif choice == "2":
-                return
-            elif choice == "3":
-                raise SystemExit(0)
-            else:
-                print("Invalid option. Please choose 1, 2, or 3.")
-    except KeyboardInterrupt:
-        exit(0)
+    if config.get("console", True):
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(level)
+        console_handler.setFormatter(formatter)
+        handlers.append(console_handler)
+
+    file_cfg = config.get("file", {})
+    if file_cfg.get("enabled", False):
+        path = file_cfg.get("path", "logs/telescope.log")
+        if not os.path.isabs(path):
+            path = os.path.join(settings.PROJECT_ROOT, path)
+        directory = os.path.dirname(path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
+        max_bytes = int(file_cfg.get("max_bytes", 5 * 1024 * 1024))
+        backup_count = int(file_cfg.get("backup_count", 5))
+        file_handler = RotatingFileHandler(
+            path,
+            maxBytes=max_bytes,
+            backupCount=backup_count,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        handlers.append(file_handler)
+
+    if not handlers:
+        return
+
+    logging.basicConfig(level=level, handlers=handlers)
 
 
 class _CountingNotifier:
@@ -196,7 +177,8 @@ async def _catch_up_scan(
     )
 
 
-def main() -> None:
+def _run() -> None:
+    _print_banner()
     _configure_logging()
     logger = logging.getLogger(__name__)
 
@@ -215,7 +197,7 @@ def main() -> None:
         only_on_match=settings.DEDUP_ONLY_ON_MATCH,
         ttl_days=settings.DEDUP_TTL_DAYS,
     )
-    logger.info('%s rules are loaded', len(rules))
+    logger.info("%s rules are loaded", len(rules))
 
     client = build_client()
     client.loop.run_until_complete(client.connect())
@@ -261,13 +243,15 @@ def main() -> None:
         snippet_chars=settings.SNIPPET_CHARS,
     )
     forum_resolver = ForumResolver(client)
-    client.loop.run_until_complete(_catch_up_scan(
-        client,
-        storage,
-        catch_up_processor,
-        catch_up_notifier,
-        forum_resolver,
-    ))
+    client.loop.run_until_complete(
+        _catch_up_scan(
+            client,
+            storage,
+            catch_up_processor,
+            catch_up_notifier,
+            forum_resolver,
+        )
+    )
 
     # Single handler keeps Telethon integration minimal and defers all filtering
     # to our core processor for consistency and testability.
@@ -287,15 +271,28 @@ def main() -> None:
 
     # Explicit lifecycle management makes start/shutdown behavior obvious.
     client.start()
-    _startup_menu(client)
     logger.info("Client connected. Listening for incoming messages...")
     client.run_until_disconnected()
 
 
+def _setup() -> None:
+    _print_banner()
+    print("Setup is not implemented yet. This will host the config TUI soon.")
+
+
+def main(argv: Optional[list[str]] = None) -> None:
+    parser = argparse.ArgumentParser(prog="telescope")
+    subparsers = parser.add_subparsers(dest="command")
+
+    subparsers.add_parser("run", help="Start the watcher")
+    subparsers.add_parser("setup", help="Configure telescope (coming soon)")
+
+    args = parser.parse_args(argv)
+    if args.command == "setup":
+        _setup()
+        return
+    _run()
+
+
 if __name__ == "__main__":
     main()
-
-#TODO добавить тесты pytest
-#TODO ?сделать отдельную опцию в меню catchup вместо автоматического включения. В конфиге больше такой опции включения не будет, кроме количества сообщений.
-#TODO добавить возможность логирования в файл
-#TODO прикрутить нейронку для создания правил
