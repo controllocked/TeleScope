@@ -21,7 +21,8 @@
     },
     {
       "source_key": "@aitujobs",
-      "enabled": true
+      "enabled": true,
+      "alias": "Aitujobs"
     },
     {
       "source_key": "@zhumysbar",
@@ -46,105 +47,297 @@
       "source_key": "@kapdfadfa",
       "alias": "Test channel 2",
       "enabled": true
-    },
-    {
-      "source_key": "@fdsfsafsfd",
-      "alias": "Test group 2",
-      "enabled": true
     }
   ],
   "rules": [
-  {
-    "name": "Jobs - Junior/Intern (EN)",
-    "keywords": ["junior", "intern", "internship", "trainee", "entry level", "graduate"],
-    "regex": ["\\b(junior|intern(ship)?|trainee|entry[- ]level|graduate)\\b"],
-    "exclude_keywords": ["senior", "lead", "principal", "staff", "cto", "5+ years", "7+ years", "10+ years"],
-    "enabled": true
-  },
-  {
-    "name": "Jobs - Python Backend",
-    "keywords": ["python", "django", "fastapi", "flask", "backend"],
-    "regex": ["\\bpython\\b", "\\b(django|fastapi|flask)\\b"],
-    "exclude_keywords": ["php", "wordpress", "magento", "drupal"],
-    "enabled": true
-  },
-  {
-    "name": "Hiring - General (EN)",
-    "keywords": ["hiring", "we are hiring", "looking for", "join our team", "vacancy"],
-    "regex": ["\\b(opening|role|position|apply|cv|resume)\\b"],
-    "exclude_keywords": ["not hiring", "no hiring", "hiring freeze", "positions closed"],
-    "enabled": true
-  },
-  {
-    "name": "Jobs - RU (вакансия/ищем)",
-    "keywords": ["вакансия", "ищем", "требуется", "набираем", "работа", "отклик"],
-    "regex": ["\\b(ваканси(я|и)|ищем|требуется|набираем|отклик(и|нуться)?)\\b"],
-    "exclude_keywords": ["не ищем", "не нанимаем", "найм закрыт", "стоп найм"],
-    "enabled": true
-  },
-  {
-    "name": "Security - CVE / Vulnerability",
-    "keywords": ["vulnerability", "exploit", "patch", "rce", "0day", "zero-day"],
-    "regex": ["\\bCVE-\\d{4}-\\d+\\b", "\\b(RCE|XSS|SSRF|LFI|RFI)\\b"],
-    "exclude_keywords": ["cve-mock", "training only", "demo"],
-    "enabled": true
-  },
-  {
-    "name": "Security - Data breach / Leak (RU+EN)",
-    "keywords": ["breach", "leak", "leaked", "database leak", "слив", "утечк", "база данных", "компромет"],
-    "regex": ["\\b(breach|leak(ed)?)\\b", "\\b(утечк\\w*|слив\\w*|компромет\\w*)\\b"],
-    "exclude_keywords": ["fiction", "fanfic", "шутка", "meme"],
-    "enabled": false
-  },
-  {
-    "name": "Marketplace - Selling/Buying (RU)",
-    "keywords": ["продам", "куплю", "продаю", "обмен", "торг", "состояние", "доставка"],
-    "regex": ["\\b(продам|куплю|обмен(яю)?|торг)\\b"],
-    "exclude_keywords": ["продано", "sold", "не актуально", "закрыто"],
-    "enabled": true
-  },
-  {
-    "name": "Crypto - TON / Toncoin",
-    "keywords": ["ton", "toncoin", "the open network", "$ton", "wallet", "airdrop"],
-    "regex": ["\\bTON\\b", "\\$TON\\b", "\\b(airdrop|wallet|seed phrase)\\b"],
-    "exclude_keywords": ["testnet", "devnet", "scam", "fraud"],
-    "enabled": true
-  },
-  {
-    "name": "Payments - Refund / Chargeback",
-    "keywords": ["refund", "chargeback", "dispute", "reversal", "возврат", "чарджбек", "спор", "списали"],
-    "regex": ["\\b(refund|chargeback|dispute)\\b", "\\b(возврат\\w*|чарджбек\\w*|оспор\\w*)\\b"],
-    "exclude_keywords": ["no refund", "non-refundable", "без возврата"],
-    "enabled": true
-  },
-  {
-    "name": "Urgency / Deadline",
-    "keywords": ["urgent", "asap", "deadline", "today", "tomorrow", "срочно", "дедлайн", "сегодня", "завтра"],
-    "regex": ["\\b(urgent|asap|deadline)\\b", "\\b(срочно|дедлайн)\\b"],
-    "exclude_keywords": ["not urgent", "не срочно"],
-    "enabled": true
-  },
-  {
-    "name": "Scam / Phishing - Common Signals",
-    "keywords": ["seed phrase", "verify your account", "support team", "login link", "введите код", "подтвердите аккаунт", "служба поддержки"],
-    "regex": ["\\b(seed phrase|mnemonic)\\b", "\\bverify(\\s+your)?\\s+account\\b", "\\b(подтверд(и|ите)\\s+аккаунт|введите\\s+код)\\b"],
-    "exclude_keywords": ["official", "announcement", "pinned"],
-    "enabled": true
-  },
-  {
-    "name": "Moderation - Toxic Slurs (RU+EN)",
-    "keywords": ["идиот", "дебил", "moron", "stupid"],
-    "regex": ["\\b(idiot|moron|stupid)\\b", "\\b(дебил|идиот)\\b"],
-    "exclude_keywords": ["quote", "цитата", "meme", "шутка"],
-    "enabled": true
-  },
-  {
-    "name": "System/Infra - Outage / Incident",
-    "keywords": ["outage", "downtime", "incident", "degraded", "latency", "ошибка", "упало", "не работает"],
-    "regex": ["\\b(outage|downtime|incident)\\b", "\\b(упал[ао]?|лежит|не\\s+работает)\\b"],
-    "exclude_keywords": ["scheduled maintenance", "плановые работы"],
-    "enabled": true
-  }
+    {
+      "name": "Jobs - Junior/Intern (EN)",
+      "keywords": [
+        "junior",
+        "intern",
+        "internship",
+        "trainee",
+        "entry level",
+        "graduate"
+      ],
+      "regex": [
+        "\\b(junior|intern(ship)?|trainee|entry[- ]level|graduate)\\b"
+      ],
+      "exclude_keywords": [
+        "senior",
+        "lead",
+        "principal",
+        "staff",
+        "cto",
+        "5+ years",
+        "7+ years",
+        "10+ years"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Jobs - Python Backend",
+      "keywords": [
+        "python",
+        "django",
+        "fastapi",
+        "flask",
+        "backend"
+      ],
+      "regex": [
+        "\\bpython\\b",
+        "\\b(django|fastapi|flask)\\b"
+      ],
+      "exclude_keywords": [
+        "php",
+        "wordpress",
+        "magento",
+        "drupal"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Hiring - General (EN)",
+      "keywords": [
+        "hiring",
+        "we are hiring",
+        "looking for",
+        "join our team",
+        "vacancy"
+      ],
+      "regex": [
+        "\\b(opening|role|position|apply|cv|resume)\\b"
+      ],
+      "exclude_keywords": [
+        "not hiring",
+        "no hiring",
+        "hiring freeze",
+        "positions closed"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Jobs - RU (\u0432\u0430\u043a\u0430\u043d\u0441\u0438\u044f/\u0438\u0449\u0435\u043c)",
+      "keywords": [
+        "\u0432\u0430\u043a\u0430\u043d\u0441\u0438\u044f",
+        "\u0438\u0449\u0435\u043c",
+        "\u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f",
+        "\u043d\u0430\u0431\u0438\u0440\u0430\u0435\u043c",
+        "\u0440\u0430\u0431\u043e\u0442\u0430",
+        "\u043e\u0442\u043a\u043b\u0438\u043a"
+      ],
+      "regex": [
+        "\\b(\u0432\u0430\u043a\u0430\u043d\u0441\u0438(\u044f|\u0438)|\u0438\u0449\u0435\u043c|\u0442\u0440\u0435\u0431\u0443\u0435\u0442\u0441\u044f|\u043d\u0430\u0431\u0438\u0440\u0430\u0435\u043c|\u043e\u0442\u043a\u043b\u0438\u043a(\u0438|\u043d\u0443\u0442\u044c\u0441\u044f)?)\\b"
+      ],
+      "exclude_keywords": [
+        "\u043d\u0435 \u0438\u0449\u0435\u043c",
+        "\u043d\u0435 \u043d\u0430\u043d\u0438\u043c\u0430\u0435\u043c",
+        "\u043d\u0430\u0439\u043c \u0437\u0430\u043a\u0440\u044b\u0442",
+        "\u0441\u0442\u043e\u043f \u043d\u0430\u0439\u043c"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Security - CVE / Vulnerability",
+      "keywords": [
+        "vulnerability",
+        "exploit",
+        "patch",
+        "rce",
+        "0day",
+        "zero-day"
+      ],
+      "regex": [
+        "\\bCVE-\\d{4}-\\d+\\b",
+        "\\b(RCE|XSS|SSRF|LFI|RFI)\\b"
+      ],
+      "exclude_keywords": [
+        "cve-mock",
+        "training only",
+        "demo"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Security - Data breach / Leak (RU+EN)",
+      "keywords": [
+        "breach",
+        "leak",
+        "leaked",
+        "database leak",
+        "\u0441\u043b\u0438\u0432",
+        "\u0443\u0442\u0435\u0447\u043a",
+        "\u0431\u0430\u0437\u0430 \u0434\u0430\u043d\u043d\u044b\u0445",
+        "\u043a\u043e\u043c\u043f\u0440\u043e\u043c\u0435\u0442"
+      ],
+      "regex": [
+        "\\b(breach|leak(ed)?)\\b",
+        "\\b(\u0443\u0442\u0435\u0447\u043a\\w*|\u0441\u043b\u0438\u0432\\w*|\u043a\u043e\u043c\u043f\u0440\u043e\u043c\u0435\u0442\\w*)\\b"
+      ],
+      "exclude_keywords": [
+        "fiction",
+        "fanfic",
+        "\u0448\u0443\u0442\u043a\u0430",
+        "meme"
+      ],
+      "enabled": false
+    },
+    {
+      "name": "Marketplace - Selling/Buying (RU)",
+      "keywords": [
+        "\u043f\u0440\u043e\u0434\u0430\u043c",
+        "\u043a\u0443\u043f\u043b\u044e",
+        "\u043f\u0440\u043e\u0434\u0430\u044e",
+        "\u043e\u0431\u043c\u0435\u043d",
+        "\u0442\u043e\u0440\u0433",
+        "\u0441\u043e\u0441\u0442\u043e\u044f\u043d\u0438\u0435",
+        "\u0434\u043e\u0441\u0442\u0430\u0432\u043a\u0430"
+      ],
+      "regex": [
+        "\\b(\u043f\u0440\u043e\u0434\u0430\u043c|\u043a\u0443\u043f\u043b\u044e|\u043e\u0431\u043c\u0435\u043d(\u044f\u044e)?|\u0442\u043e\u0440\u0433)\\b"
+      ],
+      "exclude_keywords": [
+        "\u043f\u0440\u043e\u0434\u0430\u043d\u043e",
+        "sold",
+        "\u043d\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u043e",
+        "\u0437\u0430\u043a\u0440\u044b\u0442\u043e"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Crypto - TON / Toncoin",
+      "keywords": [
+        "ton",
+        "toncoin",
+        "the open network",
+        "$ton",
+        "wallet",
+        "airdrop"
+      ],
+      "regex": [
+        "\\bTON\\b",
+        "\\$TON\\b",
+        "\\b(airdrop|wallet|seed phrase)\\b"
+      ],
+      "exclude_keywords": [
+        "testnet",
+        "devnet",
+        "scam",
+        "fraud"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Payments - Refund / Chargeback",
+      "keywords": [
+        "refund",
+        "chargeback",
+        "dispute",
+        "reversal",
+        "\u0432\u043e\u0437\u0432\u0440\u0430\u0442",
+        "\u0447\u0430\u0440\u0434\u0436\u0431\u0435\u043a",
+        "\u0441\u043f\u043e\u0440",
+        "\u0441\u043f\u0438\u0441\u0430\u043b\u0438"
+      ],
+      "regex": [
+        "\\b(refund|chargeback|dispute)\\b",
+        "\\b(\u0432\u043e\u0437\u0432\u0440\u0430\u0442\\w*|\u0447\u0430\u0440\u0434\u0436\u0431\u0435\u043a\\w*|\u043e\u0441\u043f\u043e\u0440\\w*)\\b"
+      ],
+      "exclude_keywords": [
+        "no refund",
+        "non-refundable",
+        "\u0431\u0435\u0437 \u0432\u043e\u0437\u0432\u0440\u0430\u0442\u0430"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Urgency / Deadline",
+      "keywords": [
+        "urgent",
+        "asap",
+        "deadline",
+        "today",
+        "tomorrow",
+        "\u0441\u0440\u043e\u0447\u043d\u043e",
+        "\u0434\u0435\u0434\u043b\u0430\u0439\u043d",
+        "\u0441\u0435\u0433\u043e\u0434\u043d\u044f",
+        "\u0437\u0430\u0432\u0442\u0440\u0430"
+      ],
+      "regex": [
+        "\\b(urgent|asap|deadline)\\b",
+        "\\b(\u0441\u0440\u043e\u0447\u043d\u043e|\u0434\u0435\u0434\u043b\u0430\u0439\u043d)\\b"
+      ],
+      "exclude_keywords": [
+        "not urgent",
+        "\u043d\u0435 \u0441\u0440\u043e\u0447\u043d\u043e"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Scam / Phishing - Common Signals",
+      "keywords": [
+        "seed phrase",
+        "verify your account",
+        "support team",
+        "login link",
+        "\u0432\u0432\u0435\u0434\u0438\u0442\u0435 \u043a\u043e\u0434",
+        "\u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u0430\u043a\u043a\u0430\u0443\u043d\u0442",
+        "\u0441\u043b\u0443\u0436\u0431\u0430 \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438"
+      ],
+      "regex": [
+        "\\b(seed phrase|mnemonic)\\b",
+        "\\bverify(\\s+your)?\\s+account\\b",
+        "\\b(\u043f\u043e\u0434\u0442\u0432\u0435\u0440\u0434(\u0438|\u0438\u0442\u0435)\\s+\u0430\u043a\u043a\u0430\u0443\u043d\u0442|\u0432\u0432\u0435\u0434\u0438\u0442\u0435\\s+\u043a\u043e\u0434)\\b"
+      ],
+      "exclude_keywords": [
+        "official",
+        "announcement",
+        "pinned"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Moderation - Toxic Slurs (RU+EN)",
+      "keywords": [
+        "\u0438\u0434\u0438\u043e\u0442",
+        "\u0434\u0435\u0431\u0438\u043b",
+        "moron",
+        "stupid"
+      ],
+      "regex": [
+        "\\b(idiot|moron|stupid)\\b",
+        "\\b(\u0434\u0435\u0431\u0438\u043b|\u0438\u0434\u0438\u043e\u0442)\\b"
+      ],
+      "exclude_keywords": [
+        "quote",
+        "\u0446\u0438\u0442\u0430\u0442\u0430",
+        "meme",
+        "\u0448\u0443\u0442\u043a\u0430"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "System/Infra - Outage / Incident",
+      "keywords": [
+        "outage",
+        "downtime",
+        "incident",
+        "degraded",
+        "latency",
+        "\u043e\u0448\u0438\u0431\u043a\u0430",
+        "\u0443\u043f\u0430\u043b\u043e",
+        "\u043d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442"
+      ],
+      "regex": [
+        "\\b(outage|downtime|incident)\\b",
+        "\\b(\u0443\u043f\u0430\u043b[\u0430\u043e]?|\u043b\u0435\u0436\u0438\u0442|\u043d\u0435\\s+\u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442)\\b"
+      ],
+      "exclude_keywords": [
+        "scheduled maintenance",
+        "\u043f\u043b\u0430\u043d\u043e\u0432\u044b\u0435 \u0440\u0430\u0431\u043e\u0442\u044b"
+      ],
+      "enabled": true
+    }
   ],
   "dedup": {
     "mode": "per_source",
@@ -168,7 +361,13 @@
     },
     "redact": {
       "enabled": true,
-      "patterns": ["API_ID", "API_HASH", "BOT_API", "PHONE", "2FA"]
+      "patterns": [
+        "API_ID",
+        "API_HASH",
+        "BOT_API",
+        "PHONE",
+        "2FA"
+      ]
     }
   }
 }
