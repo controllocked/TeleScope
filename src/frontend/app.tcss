@@ -312,3 +312,43 @@ ModalScreen {
 #rules-actions Button {
     margin-right: 2;
 }
+
+#settings-panel {
+    height: 1fr;
+    padding: 1 2 2 2;
+}
+
+#settings-body {
+    height: 1fr;
+}
+
+#settings-left {
+    width: 1fr;
+    height: 1fr;
+}
+
+#settings-right {
+    width: 1fr;
+    height: 1fr;
+    padding: 1 1;
+    border-left: solid #2a3a46;
+    overflow: auto;
+}
+
+#settings-table {
+    height: 1fr;
+}
+
+#settings-title {
+    height: 1;
+    text-style: bold;
+}
+
+.settings-error {
+    height: 2;
+    color: #f05a5a;
+}
+
+#logging-redact-patterns {
+    height: 6;
+}
