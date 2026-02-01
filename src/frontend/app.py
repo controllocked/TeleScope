@@ -153,6 +153,7 @@ class ConfigPanelApp(App):
             self.config_state.error = str(exc)
         self._refresh_header()
         self._refresh_sources_tab()
+        self._refresh_rules_tab()
 
     def _save_config(self) -> bool:
         if self.config_state.data is None:
@@ -203,6 +204,13 @@ class ConfigPanelApp(App):
             return
         sources_tab.reload_from_config()
 
+    def _refresh_rules_tab(self) -> None:
+        try:
+            rules_tab = self.query_one(RulesTab)
+        except Exception:
+            return
+        rules_tab.reload_from_config()
+
     def update_config_section(self, section: str, value: Any) -> None:
         """Update a config section in memory and mark dirty."""
         if self.config_state.data is None:
@@ -216,4 +224,3 @@ class ConfigPanelApp(App):
             ("TELE", TELEGRAM_BLUE),
             ("SCOPE > Config Panel", "bold"),
         )
-

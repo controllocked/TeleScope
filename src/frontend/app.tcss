@@ -184,14 +184,13 @@ ModalScreen {
 
 #sources-left {
     width: 1fr;
-    max-width: 100;
     height: 1fr;
 }
 
 #sources-right {
-    width: 75;
+    width: 1fr;
     height: 1fr;
-    padding: 1 1 1 15;
+    padding: 1 1 1 1;
     border-left: solid #2a3a46;
     overflow: auto;
 
@@ -232,4 +231,84 @@ ModalScreen {
     content-align: center middle;
     color: #c6d2dd;
     text-style: bold;
+}
+
+#rules-panel {
+    height: 1fr;
+    padding: 1 2 2 2;
+}
+
+#rules-body {
+    height: 1fr;
+}
+
+#rules-left {
+    width: 1fr;
+    height: 1fr;
+}
+
+#rules-right {
+    width: 1fr;
+    height: 1fr;
+    padding: 1 1;
+    border-left: solid #2a3a46;
+    overflow: auto;
+}
+
+#rules-keyword-row {
+    height: auto;
+}
+
+#rules-keywords-block, #rules-excludes-block {
+    width: 1fr;
+}
+
+#rules-excludes-block {
+    margin-left: 1;
+}
+
+#rules-title, #rules-test-title {
+    height: 1;
+    text-style: bold;
+}
+
+#rule-regex {
+    height: 4;
+}
+
+#rule-keywords {
+    height: 16;
+    min-height: 7;
+}
+
+#rule-excludes {
+    height: 16 ;
+    min-height: 7;
+}
+
+#rule-test-text {
+    height: 4;
+}
+
+#rule-test-actions {
+    height: 2;
+    align: left middle;
+}
+
+#rule-test-result {
+    height: 3;
+    content-align: left top;
+    color: #c6d2dd;
+}
+
+#rules-actions {
+    height: 4;
+    align: left middle;
+    padding: 0 1;
+    margin: 1 0 1 0;
+    border-top: solid #2a3a46;
+}
+
+#rules-actions Button {
+    margin-right: 2;
 }
