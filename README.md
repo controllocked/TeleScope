@@ -84,6 +84,7 @@ telescope run
 ```
 
 ## Config TUI
+![config_tui](tui_example.png)
 Launch the interactive config panel:
 ```bash
 telescope config
@@ -92,11 +93,6 @@ telescope config
 The TUI lets you edit `config.json` across tabs (Sources, Rules, Settings) and
 review stored matches in the Data tab with JSON/CSV export. Save changes with
 the on-screen keybindings (see the footer).
-
-Alias:
-```bash
-telescope setup
-```
 
 ## Discover archived chats
 To list archived group/channel dialogs (useful for finding `chat_id:` values),

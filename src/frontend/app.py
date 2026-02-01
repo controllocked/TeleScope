@@ -44,7 +44,7 @@ class ConfigPanelApp(App):
             with Horizontal(id="header-row"):
                 with Vertical(id="header-left"):
                     yield Static(self._title_text(), id="title")
-                    yield Static(f"engine v{self._engine_version}", classes="subtle")
+                    yield Static(f"engine v1.1.0", classes="subtle")
                 with Vertical(id="header-right"):
                     yield Static("", id="header-status")
 
