@@ -127,3 +127,31 @@ class DeleteSourceScreen(ModalScreen[bool]):
             self.dismiss(True)
         else:
             self.dismiss(False)
+
+
+
+
+class DeleteRuleScreen(ModalScreen[bool]):
+    """Confirm deletion of a rule."""
+
+    def __init__(self, rule_name: str) -> None:
+        super().__init__()
+        self._rule_name = rule_name or "(unnamed rule)"
+
+    def compose(self) -> ComposeResult:
+        yield Container(
+            Static("Delete rule?", classes="modal-title"),
+            Static(self._rule_name, classes="modal-body"),
+            Horizontal(
+                Button("Delete", id="delete-rule-confirm", variant="error"),
+                Button("Cancel", id="delete-rule-cancel"),
+                classes="modal-actions",
+            ),
+            classes="modal-dialog modal-dialog--confirm",
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "delete-rule-confirm":
+            self.dismiss(True)
+        else:
+            self.dismiss(False)

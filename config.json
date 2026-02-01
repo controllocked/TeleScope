@@ -42,11 +42,6 @@
       "source_key": "@telescope_test",
       "alias": "Test channel",
       "enabled": true
-    },
-    {
-      "source_key": "@kapdfadfa",
-      "alias": "Test channel 2",
-      "enabled": true
     }
   ],
   "rules": [
