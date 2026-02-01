@@ -83,10 +83,29 @@ Logging (optional) example:
 telescope run
 ```
 
-Setup (placeholder):
+## Config TUI
+Launch the interactive config panel:
+```bash
+telescope config
+```
+
+The TUI lets you edit `config.json` across tabs (Sources, Rules, Settings) and
+review stored matches in the Data tab with JSON/CSV export. Save changes with
+the on-screen keybindings (see the footer).
+
+Alias:
 ```bash
 telescope setup
 ```
+
+## Discover archived chats
+To list archived group/channel dialogs (useful for finding `chat_id:` values),
+run:
+```bash
+telescope discover
+```
+This scans **archived** dialogs and prints `source_key` values. If you are not
+logged in yet, it will prompt you to authorize first.
 
 ## Session login
 Telescope uses a **user-session** (not a bot token). On first run it will ask
@@ -112,13 +131,10 @@ notifications through the Bot API instead of Saved Messages.
 - Set `notifications.bot_chat_id` in `config.json` to the target chat id.
 - Bot notifications use HTML parse mode for reliability (no Markdown errors).
 
-At startup you'll see a simple menu. The default option lists **archived**
-group chats without usernames to help you discover `chat_id` values to paste
-into `config.json`. Telescope never auto-adds chats.
+The `discover` command lists **archived** group chats without usernames to help
+you discover `chat_id` values to paste into `config.json`. Telescope never
+auto-adds chats.
 
 If `catch_up.enabled` is true, telescope will scan the last N messages for any
 sources already present in `sources_state` before real-time monitoring begins.
 
-
-## Next steps (beyond MVP)
-- TUI
