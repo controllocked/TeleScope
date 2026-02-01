@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
+from importlib import metadata
 from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.containers import Center, Container, Horizontal, Vertical
 from textual.widgets import Button, ContentSwitcher, Footer, Static, Tab, Tabs
 
-from .constants import CONFIG_PATH, TELEGRAM_BLUE
+from .constants import CONFIG_PATH, PROJECT_ROOT, TELEGRAM_BLUE
 from .modals import ReloadConfirmScreen, UnsavedChangesScreen
 from .tabs.data import DataTab
 from .tabs.rules import RulesTab
@@ -25,6 +27,7 @@ class ConfigPanelApp(App):
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.config_state = ConfigState()
+        self._engine_version = self._resolve_engine_version()
 
     BINDINGS = [
         ("ctrl+s", "save_config", "Save"),
@@ -41,7 +44,7 @@ class ConfigPanelApp(App):
             with Horizontal(id="header-row"):
                 with Vertical(id="header-left"):
                     yield Static(self._title_text(), id="title")
-                    yield Static("engine v1.0.0", classes="subtle")
+                    yield Static(f"engine v{self._engine_version}", classes="subtle")
                 with Vertical(id="header-right"):
                     yield Static("", id="header-status")
 
@@ -214,3 +217,22 @@ class ConfigPanelApp(App):
             ("TELE", TELEGRAM_BLUE),
             ("SCOPE > Config Panel", "bold"),
         )
+
+    @staticmethod
+    def _resolve_engine_version() -> str:
+        try:
+            return metadata.version("telescope")
+        except metadata.PackageNotFoundError:
+            pass
+        pyproject = PROJECT_ROOT / "pyproject.toml"
+        if pyproject.exists():
+            try:
+                match = re.search(
+                    r'(?m)^version\\s*=\\s*"(?P<version>[^"]+)"',
+                    pyproject.read_text(encoding="utf-8"),
+                )
+                if match:
+                    return match.group("version")
+            except OSError:
+                pass
+        return "unknown"

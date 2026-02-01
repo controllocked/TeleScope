@@ -6,7 +6,7 @@ import argparse
 import logging
 import os
 from logging.handlers import RotatingFileHandler
-from typing import Optional
+from typing import Any, Optional
 
 from art import tprint
 from dotenv import load_dotenv
@@ -277,7 +277,88 @@ def _run() -> None:
 
 def _setup() -> None:
     _print_banner()
-    print("Setup is not implemented yet. This will host the config TUI soon.")
+    from frontend.app import ConfigPanelApp
+
+    ConfigPanelApp().run()
+
+
+def _dialog_type(dialog: Any) -> str:
+    if getattr(dialog, "is_channel", False):
+        entity = getattr(dialog, "entity", None)
+        if getattr(entity, "megagroup", False):
+            return "group"
+        return "channel"
+    if getattr(dialog, "is_group", False):
+        return "group"
+    if getattr(dialog, "is_user", False):
+        return "user"
+    return "chat"
+
+
+def _dialog_title(dialog: Any) -> str:
+    entity = getattr(dialog, "entity", None)
+    title = getattr(entity, "title", None)
+    if title:
+        return str(title)
+    name = getattr(dialog, "name", None)
+    if name:
+        return str(name)
+    first = getattr(entity, "first_name", None)
+    last = getattr(entity, "last_name", None)
+    if first or last:
+        return " ".join(part for part in [first, last] if part)
+    entity_id = getattr(entity, "id", None)
+    return str(entity_id or "unknown")
+
+
+def _source_key_from_dialog(dialog: Any) -> str:
+    entity = getattr(dialog, "entity", None)
+    username = getattr(entity, "username", None)
+    if username:
+        return f"@{str(username).lower()}"
+    dialog_id = getattr(dialog, "id", None) or getattr(entity, "id", None)
+    return f"chat_id:{dialog_id}"
+
+
+async def _list_archived_dialogs(client, only_without_username: bool = True) -> None:
+    # Archived dialogs are a user-curated list, making them ideal for discovery
+    # without requiring commands, forwarding, or log inspection.
+    dialogs = []
+    async for dialog in client.iter_dialogs(archived=True, folder=1):
+        username = getattr(dialog.entity, "username", None)
+        # Username-less chats require chat_id:<id>, so we filter to them by
+        # default to reduce noise and make copy-paste decisions obvious.
+        if only_without_username and username:
+            continue
+        # Skip private 1:1 chats; the discovery menu focuses on group contexts.
+        if dialog.is_user:
+            continue
+        dialogs.append(dialog)
+
+    if not dialogs:
+        print("No archived dialogs match the current filter.")
+        return
+
+    for index, dialog in enumerate(dialogs, start=1):
+        dialog_type = _dialog_type(dialog)
+        title = _dialog_title(dialog)
+        source_key = _source_key_from_dialog(dialog)
+        print(f"{index}. {dialog_type} | {title} | {source_key}")
+
+
+def _discover() -> None:
+    _print_banner()
+    client = build_client()
+
+    async def _run_discover() -> None:
+        await client.connect()
+        if not await client.is_user_authorized():
+            print("Authorization required. Starting login...")
+            await authorize(client)
+        await _list_archived_dialogs(client)
+        await client.disconnect()
+
+    client.loop.run_until_complete(_run_discover())
 
 
 def main(argv: Optional[list[str]] = None) -> None:
@@ -285,11 +366,18 @@ def main(argv: Optional[list[str]] = None) -> None:
     subparsers = parser.add_subparsers(dest="command")
 
     subparsers.add_parser("run", help="Start the watcher")
-    subparsers.add_parser("setup", help="Configure telescope (coming soon)")
+    subparsers.add_parser("config", help="Launch the config TUI")
+    subparsers.add_parser(
+        "discover",
+        help="Shows private chats for discovery and scans them in the archive.",
+    )
 
     args = parser.parse_args(argv)
-    if args.command == "setup":
+    if args.command in {"setup", "config"}:
         _setup()
+        return
+    if args.command == "discover":
+        _discover()
         return
     _run()
 
