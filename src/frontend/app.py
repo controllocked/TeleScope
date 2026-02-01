@@ -12,9 +12,7 @@ from textual.widgets import Button, ContentSwitcher, Footer, Static, Tab, Tabs
 
 from .constants import CONFIG_PATH, TELEGRAM_BLUE
 from .modals import ReloadConfirmScreen, UnsavedChangesScreen
-from .tabs.account import AccountTab
 from .tabs.data import DataTab
-from .tabs.guide import GuideTab
 from .tabs.rules import RulesTab
 from .tabs.settings import SettingsTab
 from .tabs.sources import SourcesTab
@@ -45,14 +43,7 @@ class ConfigPanelApp(App):
                     yield Static(self._title_text(), id="title")
                     yield Static("engine v1.0.0", classes="subtle")
                 with Vertical(id="header-right"):
-                    yield Static("session: active", classes="subtle")
-                    yield Static("db: telescope.db", classes="subtle")
                     yield Static("", id="header-status")
-                    yield Horizontal(
-                        Button("Save", id="save-btn"),
-                        Button("Reload", id="reload-btn"),
-                        id="header-actions",
-                    )
 
         with Container(id="tabs-bar"):
             with Center(id="tabs-center"):
@@ -60,9 +51,7 @@ class ConfigPanelApp(App):
                     Tab("Sources", id="sources"),
                     Tab("Rules", id="rules"),
                     Tab("Settings", id="settings"),
-                    Tab("Account", id="account"),
                     Tab("Data", id="data"),
-                    Tab("Guide", id="guide"),
                     id="tabs",
                 )
 
@@ -70,9 +59,7 @@ class ConfigPanelApp(App):
             yield SourcesTab(id="sources")
             yield RulesTab(id="rules")
             yield SettingsTab(id="settings")
-            yield AccountTab(id="account")
             yield DataTab(id="data")
-            yield GuideTab(id="guide")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -181,8 +168,6 @@ class ConfigPanelApp(App):
 
     def _refresh_header(self) -> None:
         status = self.query_one("#header-status", Static)
-        save_btn = self.query_one("#save-btn", Button)
-        reload_btn = self.query_one("#reload-btn", Button)
 
         status.remove_class("status-loaded", "status-modified", "status-error")
         if self.config_state.error:
@@ -194,9 +179,6 @@ class ConfigPanelApp(App):
         else:
             status.update("config: loaded")
             status.add_class("status-loaded")
-
-        save_btn.disabled = self.config_state.data is None or not self.config_state.dirty
-        reload_btn.disabled = False
 
     def _refresh_sources_tab(self) -> None:
         try:
