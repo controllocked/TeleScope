@@ -6,9 +6,9 @@ coupling to any integration-specific types.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 
 @dataclass(frozen=True)
@@ -33,3 +33,4 @@ class MatchRecord:
     rule_name: str
     reason: str
     text_snippet: str
+    tags: List[str] = field(default_factory=list)

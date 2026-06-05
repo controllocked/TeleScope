@@ -1,0 +1,201 @@
+{
+  "_pack": "ics-scada",
+  "_version": "1.0",
+  "_description": "Industrial Control System (ICS), SCADA, OT, and critical-infrastructure targeting. Detects discussion of exposed PLCs/HMIs, ICS-specific malware families, vendor-specific vulnerabilities (Siemens / Schneider / Rockwell / Mitsubishi), and direct internet-facing ICS access listings. Highest-value pack for energy, manufacturing, utilities, oil & gas, and water sectors.",
+  "rules": [
+    {
+      "_description": "ICS-specific malware families - Industroyer, Triton/Trisis, Pipedream, CrashOverride, Stuxnet variants, Fuxnet, BlackEnergy, IronGate. These are rare and high-impact; mere mention in a sale or operational-distribution context is critical.",
+      "_fp_risk": "Low. ICS malware family names are distinctive and rarely appear outside threat-intelligence discussion.",
+      "_severity_rationale": "Critical - operational ICS malware threatens physical safety and continuity of essential services.",
+      "name": "ICS - operational ICS malware mention",
+      "keywords": [
+        "industroyer",
+        "industroyer2",
+        "triton",
+        "trisis",
+        "havex",
+        "blackenergy",
+        "crashoverride",
+        "pipedream",
+        "incontroller",
+        "fuxnet",
+        "irongate",
+        "ekans",
+        "snake ransomware"
+      ],
+      "regex": [
+        "(?is)(?=.*\\b(stuxnet)\\b)(?=.*\\b(variant|sample|build|sale|sell(ing)?|drop|leaked|source|panel)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "yara rule",
+        "detection rule",
+        "ioc list",
+        "according to researchers",
+        "researchers from",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news",
+        "thehackernews",
+        "dragos report",
+        "claroty report",
+        "mandiant",
+        "nozomi networks"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:ics",
+        "category:ics-malware",
+        "mitre:T0828",
+        "mitre:T0809"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Vulnerabilities or exploits targeting ICS vendor products. Two-signal lookahead: ICS vendor/product term + vulnerability/exploit/access term. Vendors covered: Siemens, Schneider, Rockwell, Mitsubishi, Honeywell, Yokogawa, GE Digital, Emerson, Phoenix Contact, Beckhoff, ABB.",
+      "_fp_risk": "Medium. Mature ICS-CERT advisories use overlapping language - excludes pin ICS-CERT / Dragos / Claroty research framing.",
+      "_severity_rationale": "High - ICS vendor vulnerabilities have outsized real-world impact.",
+      "name": "ICS - vendor product vulnerability",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(siemens\\s+simatic|simatic\\s+s7|simatic\\s+wincc|profinet|siemens\\s+tia|schneider\\s+modicon|modicon\\s+plc|schneider\\s+ecostruxure|rockwell\\s+(automation|logix|controllogix|micrologix|compactlogix)|allen-?bradley|mitsubishi\\s+(melsec|mx\\s+component)|honeywell\\s+experion|yokogawa\\s+centum|ge\\s+(digital|cimplicity|proficy)|emerson\\s+ovation|phoenix\\s+contact|beckhoff\\s+twincat|abb\\s+(800xa|ac500))\\b)(?=.*\\b(0\\s*-?\\s*day|zero[-\\s]?day|exploit|preauth\\s+rce|unauth(enticated)?\\s+rce|auth\\s+bypass|firmware\\s+(backdoor|implant)|hardcoded\\s+(credentials|backdoor)|default\\s+credentials\\s+exploit|access\\s+for\\s*sale)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "yara rule",
+        "detection rule",
+        "official advisory",
+        "ics-cert",
+        "cisa advisory",
+        "dragos report",
+        "claroty report",
+        "nozomi networks",
+        "mandiant",
+        "according to researchers",
+        "researchers from"
+      ],
+      "tags": [
+        "severity:high",
+        "category:ics",
+        "category:ics-vuln",
+        "mitre:T0819",
+        "mitre:T0866"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Direct access to ICS/OT assets for sale - exposed PLC/HMI/RTU access, plant network access, OT VPN. Two-signal lookahead: ICS-asset term + sale/access/exposed language.",
+      "_fp_risk": "Low. ICS-access-sale jargon is very distinctive.",
+      "_severity_rationale": "Critical - direct OT access enables physical impact attacks.",
+      "name": "ICS - OT / plant network access for sale",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(plc\\s+access|hmi\\s+access|scada\\s+access|rtu\\s+access|ot\\s+network|ot\\s+vpn|plant\\s+network|industrial\\s+control|control\\s+system\\s+access|dcs\\s+access|historian\\s+access)\\b)(?=.*\\b(sell(ing)?|for\\s*sale|access|exposed|reachable|internet[-\\s]facing|shodan\\s+exposed|dm\\s+(me|for)|pm\\s+(me|for)|escrow|price)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "tabletop exercise",
+        "purple team",
+        "ics-cert advisory",
+        "cisa advisory",
+        "dragos report",
+        "claroty report",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:ics",
+        "category:ot-access",
+        "mitre:T0822",
+        "mitre:T0883"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Discussion of internet-exposed ICS via Shodan/Censys/Zoomeye searches against ICS protocols (Modbus, DNP3, BACnet, S7Comm, EtherNet/IP, OPC UA). Two-signal lookahead: search engine + ICS protocol term.",
+      "_fp_risk": "Medium. Security researchers and Shodan blog use similar language - excludes pin research framing.",
+      "_severity_rationale": "Medium-high - exposed-ICS reconnaissance is the first step toward targeting; aggregated lists indicate active campaigns.",
+      "name": "ICS - exposed device enumeration",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(shodan|censys|zoomeye|fofa|onyphe|hunter\\.how)\\b)(?=.*\\b(modbus|dnp3|bacnet|s7comm|s7\\s+plc|ethernet/ip|enip|opc[-\\s]ua|iec\\s+104|iec\\s+61850|profinet|hart|niagara\\s+fox|fox\\s+protocol)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "shodan blog",
+        "censys research",
+        "dragos report",
+        "claroty report",
+        "according to researchers",
+        "researchers from",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news"
+      ],
+      "tags": [
+        "severity:medium",
+        "category:ics",
+        "category:exposed-device",
+        "mitre:T0846",
+        "mitre:T0888"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Critical-infrastructure sector targeting - energy/grid/water/oil&gas + cyber-attack language. Two-signal lookahead: sector term + targeting/disruption language.",
+      "_fp_risk": "Medium. News coverage of nation-state activity uses similar language - excludes pin obvious news framing.",
+      "_severity_rationale": "High - sector-targeting chatter indicates campaign preparation against critical infrastructure.",
+      "name": "ICS - critical infrastructure sector targeting",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(power\\s+grid|electric\\s+grid|electricity\\s+grid|substation|gas\\s+pipeline|oil\\s+pipeline|refinery|water\\s+(treatment|utility|plant)|nuclear\\s+(facility|plant)|hydroelectric|wind\\s+farm|natural\\s+gas\\s+pipeline|district\\s+heating)\\b)(?=.*\\b(cyber\\s+attack|target(ing|ed)|breach(ed)?|compromised|disrupt(ed|ion)|sabotage|access\\s+for\\s*sale|insider|wiper|destructive\\s+malware)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "tabletop exercise",
+        "official statement",
+        "press release",
+        "investor relations",
+        "krebsonsecurity",
+        "krebs on security",
+        "bleeping computer",
+        "the hacker news",
+        "thehackernews",
+        "the record",
+        "therecord",
+        "according to researchers",
+        "researchers from",
+        "reported by",
+        "dragos report",
+        "claroty report",
+        "mandiant report",
+        "cisa advisory"
+      ],
+      "tags": [
+        "severity:high",
+        "category:ics",
+        "category:cni-targeting",
+        "mitre:T0849",
+        "mitre:T0827"
+      ],
+      "enabled": true
+    }
+  ]
+}

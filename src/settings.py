@@ -78,6 +78,10 @@ SNIPPET_CHARS = int(_notifications.get("snippet_chars", 400))
 NOTIFICATION_METHOD = _notifications.get("notification_method", "saved_messages")
 # Bot chat id is only required when notification_method=bot.
 BOT_CHAT_ID = _notifications.get("bot_chat_id")
+# Webhook delivery (notification_method=webhook).
+WEBHOOK_URL = _notifications.get("webhook_url")
+WEBHOOK_HEADERS = _notifications.get("webhook_headers") or {}
+WEBHOOK_TIMEOUT = float(_notifications.get("webhook_timeout", 5.0))
 
 # Catch-up scan settings for startup backfill.
 _catch_up = _CONFIG.get("catch_up", {})

@@ -1,0 +1,127 @@
+{
+  "_pack": "brand-monitoring",
+  "_version": "1.0",
+  "_description": "TEMPLATE pack - replace the YOURBRAND / yourdomain.com / yourexec placeholders with your organization's identifiers before using. Detects mentions of your brand, domains, executives, or product names in contexts that suggest targeting (leak, sale, compromise, impersonation). This is the highest-ROI pack for organizations because it is org-specific.",
+  "_usage_note": "Before enabling: search-and-replace placeholder strings across this file with your own brand identifiers. Examples below use YOURBRAND, yourdomain.com, YourExec. Run the pack against your own corpus and tune excludes to suppress your own marketing channels, partner mentions, etc.",
+  "rules": [
+    {
+      "_description": "Your brand mentioned alongside leak/breach/dump/exposed language. Two-signal lookahead: brand identifier + leak-context term. This catches both 'YOURBRAND database leaked' and 'leaked data from yourdomain.com'.",
+      "_fp_risk": "Medium. Will fire on legitimate news of your own breach (which is actually useful - you want to know). Tune excludes for your investor-relations or PR feeds.",
+      "_severity_rationale": "Critical - any third-party mention of your brand in leak context is a P0 signal.",
+      "name": "Brand - YOURBRAND in leak/breach context",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(YOURBRAND|yourdomain\\.com|yourbrand\\.com)\\b)(?=.*\\b(leak|leaked|breach|breached|dump|dumped|exposed|stolen|exfiltrat(ed|ion)|compromised|for\\s*sale|selling|publish(ed|ing)|posted)\\b)"
+      ],
+      "exclude_keywords": [
+        "internal partner channel",
+        "investor relations",
+        "official press release",
+        "our own announcement"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:brand",
+        "category:leak-mention",
+        "mitre:T1593"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Corporate access listing matching your brand. Two-signal lookahead: brand identifier + IAB-style language (vpn access, rdp access, domain admin, etc.). High-confidence signal of active targeting.",
+      "_fp_risk": "Low. Combination of your brand name + access-sale jargon is rarely benign.",
+      "_severity_rationale": "Critical - direct sale of access to your environment.",
+      "name": "Brand - YOURBRAND in IAB context",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(YOURBRAND|yourdomain\\.com|yourbrand\\.com)\\b)(?=.*\\b(vpn\\s+access|rdp\\s+access|ssh\\s+access|citrix\\s+access|fortinet\\s+access|domain\\s+admin|webshell|ad\\s+access|shell\\s+access|network\\s+access|corporate\\s+access|company\\s+access)\\b)(?=.*\\b(sell(ing)?|for\\s*sale|sale|price|escrow|dm\\s+(me|for)|pm\\s+(me|for))\\b)"
+      ],
+      "exclude_keywords": [
+        "internal sysadmin",
+        "internal it",
+        "official partner",
+        "our partner",
+        "documentation"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:brand",
+        "category:iab-targeting",
+        "mitre:T1078"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Executive name or VIP-identifier mentioned in compromise / impersonation / doxx context. Two-signal lookahead: exec name + targeting language.",
+      "_fp_risk": "Medium. Your exec may legitimately be in the news. Excludes pin obvious news framing.",
+      "_severity_rationale": "High - executive targeting precedes business email compromise, deepfake, and impersonation campaigns.",
+      "name": "Brand - executive impersonation / targeting",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(YourCEO|YourCFO|YourCTO|YourExec|YourFounder)\\b)(?=.*\\b(impersonat(e|ion|ing)|deepfake|fake\\s+account|phishing\\s+target|targeting|spoof(ed|ing)?|fake\\s+email|business\\s+email\\s+compromise|bec|doxx?ed|leak(ed)?\\s+private)\\b)"
+      ],
+      "exclude_keywords": [
+        "official statement",
+        "press conference",
+        "earnings call",
+        "annual report",
+        "linkedin post by",
+        "twitter post by",
+        "official interview"
+      ],
+      "tags": [
+        "severity:high",
+        "category:brand",
+        "category:executive-targeting",
+        "mitre:T1566.002"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Phishing / lookalike / typosquat domain related to your brand. Replace yourdomain with your apex; pattern matches yourdomain-something, your-domain, your-d0main (homograph). Generic regex catches common typosquat patterns.",
+      "_fp_risk": "Medium. Marketing/partner subdomains may match. Tune by enumerating your own legitimate subdomains in excludes.",
+      "_severity_rationale": "High - typosquat registration is a leading indicator of phishing campaign launch.",
+      "name": "Brand - YOURBRAND lookalike / typosquat domain",
+      "keywords": [],
+      "regex": [
+        "(?is)\\b(your[-_.]?domain|your[-_.]?brand|y0urdomain|yourd0main|yourdomian)[a-z0-9-]*\\.(com|net|org|io|co|app|xyz|info|biz|live|online|site|shop)\\b"
+      ],
+      "exclude_keywords": [
+        "yourdomain.com (official)",
+        "our official site",
+        "blog.yourdomain.com",
+        "support.yourdomain.com",
+        "docs.yourdomain.com"
+      ],
+      "tags": [
+        "severity:high",
+        "category:brand",
+        "category:typosquat",
+        "mitre:T1583.001"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Customer-database keyword + your brand - matches dumps explicitly attributed to your company. Two-signal lookahead: brand + database/leak language.",
+      "_fp_risk": "Low. Database leak phrasing tied to your name is rarely benign.",
+      "_severity_rationale": "Critical - direct attribution of leaked data to your brand.",
+      "name": "Brand - YOURBRAND customer database leak",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(YOURBRAND|yourdomain\\.com|yourbrand\\.com)\\b)(?=.*\\b(customer\\s+(database|db|data|records)|users?\\s+(database|db)|employee\\s+(database|db)|full\\s+(db|database)\\s+dump|sql\\s+dump\\s+of)\\b)"
+      ],
+      "exclude_keywords": [
+        "internal backup",
+        "internal restore",
+        "scheduled maintenance"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:brand",
+        "category:customer-data-leak",
+        "mitre:T1589"
+      ],
+      "enabled": true
+    }
+  ]
+}

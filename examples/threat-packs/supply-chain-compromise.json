@@ -1,0 +1,170 @@
+{
+  "_pack": "supply-chain-compromise",
+  "_version": "1.0",
+  "_description": "Software supply-chain attacks: malicious package uploads (npm, PyPI, RubyGems, Crates.io, Maven), trojanized GitHub repos, package typosquats, and post-install script abuse. Detects discussion of fresh supply-chain incidents which are typically broadcast quickly in TI circles.",
+  "rules": [
+    {
+      "_description": "Malicious package upload on a public registry. Two-signal lookahead: registry/ecosystem mention + malicious/trojan/backdoor framing.",
+      "_fp_risk": "Low-medium. Threat-research blogs use similar language - excludes pin Socket/Phylum/Snyk research framing.",
+      "_severity_rationale": "Critical - supply-chain compromises affect every downstream user automatically.",
+      "name": "Supply chain - malicious package upload",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(npm|pypi|pip\\s+install|rubygems|gem\\s+install|crates\\.io|cargo\\s+install|maven|gradle|nuget|composer|packagist|go\\s+get|cocoapods)\\b)(?=.*\\b(malicious|trojan(ized)?|backdoor(ed)?|infostealer|crypto\\s+(stealer|miner)|cryptominer|malware|hidden\\s+payload|wallet\\s+stealer|exfiltrat(e|ion)|reverse\\s+shell|c2\\s+beacon)\\b)"
+      ],
+      "exclude_keywords": [
+        "yara rule",
+        "detection rule",
+        "ioc list",
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "intentionally vulnerable",
+        "lab environment",
+        "socket.dev",
+        "socket research",
+        "phylum research",
+        "snyk research",
+        "github security advisory",
+        "according to researchers",
+        "researchers from",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:supply-chain",
+        "category:malicious-package",
+        "mitre:T1195.002"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Typosquat / dependency-confusion package targeting a known popular library. Two-signal lookahead: registry mention + typosquat/lookalike/dependency-confusion language.",
+      "_fp_risk": "Low. Dependency-confusion jargon is distinctive.",
+      "_severity_rationale": "High - typosquat packages auto-distribute via developer copy/paste mistakes.",
+      "name": "Supply chain - typosquat / dependency confusion package",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(npm|pypi|rubygems|crates\\.io|maven|nuget|composer)\\b)(?=.*\\b(typosquat|typo\\s+squat|lookalike\\s+package|dependency\\s+confusion|impersonating\\s+package|squatted\\s+package|name\\s+squatting|mistype|fake\\s+package)\\b)"
+      ],
+      "exclude_keywords": [
+        "yara rule",
+        "detection rule",
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "socket.dev",
+        "phylum",
+        "snyk",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:supply-chain",
+        "category:typosquat-package",
+        "mitre:T1195.002"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Compromised maintainer / hijacked package. Two-signal lookahead: package/repo language + hijack/compromise/takeover framing.",
+      "_fp_risk": "Low-medium. GitHub takeover stories in news fire - excludes pin obvious news framing.",
+      "_severity_rationale": "Critical - maintainer hijack injects malicious code into legitimate, trusted packages.",
+      "name": "Supply chain - maintainer / package hijack",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(npm\\s+package|pypi\\s+package|github\\s+repo|github\\s+repository|rubygem|crate|maven\\s+artifact)\\b)(?=.*\\b(hijack(ed|ing)?|takeover|account\\s+takeover|maintainer\\s+compromised|maintainer\\s+account|credentials\\s+stolen|2fa\\s+bypass|push(ed)?\\s+malicious|published\\s+malicious|injected\\s+(into|in)\\s+(package|version))\\b)"
+      ],
+      "exclude_keywords": [
+        "yara rule",
+        "detection rule",
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news",
+        "thehackernews",
+        "according to researchers",
+        "github security advisory"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:supply-chain",
+        "category:maintainer-hijack",
+        "mitre:T1195.001"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Trojanized GitHub repository - fake security tool, fake PoC, fake hack-tool that includes malware. Common attack vector against security researchers.",
+      "_fp_risk": "Medium. Researchers discuss trojanized repos with similar language - excludes pin research framing.",
+      "_severity_rationale": "High - trojanized repos compromise the security community itself.",
+      "name": "Supply chain - trojanized github repo / fake PoC",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(github\\s+repo|github\\s+repository|github\\.com|gitlab\\s+repo|fake\\s+poc|fake\\s+exploit|trojanized\\s+poc|fake\\s+security\\s+tool|fake\\s+hack(ing)?\\s+tool)\\b)(?=.*\\b(malicious|trojan(ized)?|backdoor(ed)?|infostealer|wallet\\s+stealer|hidden\\s+payload|crypto\\s+miner|cryptominer|exfiltrat(e|ion)|c2\\s+beacon|reverse\\s+shell)\\b)"
+      ],
+      "exclude_keywords": [
+        "yara rule",
+        "detection rule",
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "intentionally vulnerable",
+        "vulnhub",
+        "according to researchers",
+        "researchers from",
+        "krebsonsecurity",
+        "bleeping computer",
+        "checkpoint research",
+        "socket research"
+      ],
+      "tags": [
+        "severity:high",
+        "category:supply-chain",
+        "category:trojanized-repo",
+        "mitre:T1195.002"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Post-install / setup.py / npm-postinstall abuse - when discussion mentions package install scripts being used as attack vectors. Two-signal lookahead: install-hook term + malicious/payload term.",
+      "_fp_risk": "Low. Install-hook + malicious is distinctive vocabulary.",
+      "_severity_rationale": "High - install-hook execution is silent, runs with developer privileges.",
+      "name": "Supply chain - install-script payload",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(postinstall|preinstall|setup\\.py|install\\s+hook|install\\s+script|build\\s+script|preflight\\s+script|onload\\s+hook|gem\\s+install\\s+hook)\\b)(?=.*\\b(malicious|backdoor(ed)?|exfiltrat(e|ion)|infostealer|reverse\\s+shell|c2|payload|hidden|obfuscated|stealer|wallet\\s+steal)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "yara rule",
+        "detection rule",
+        "according to researchers",
+        "researchers from",
+        "krebsonsecurity",
+        "bleeping computer"
+      ],
+      "tags": [
+        "severity:high",
+        "category:supply-chain",
+        "category:install-script",
+        "mitre:T1059",
+        "mitre:T1195.002"
+      ],
+      "enabled": true
+    }
+  ]
+}

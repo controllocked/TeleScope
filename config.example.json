@@ -1,0 +1,163 @@
+{
+  "catch_up": {
+    "enabled": true,
+    "messages_per_source": 50
+  },
+  "sources": [
+    {
+      "source_key": "@example_public_channel",
+      "alias": "Example public channel",
+      "enabled": false
+    },
+    {
+      "source_key": "chat_id:-1001234567890",
+      "alias": "Example private group (replace with your own)",
+      "enabled": false
+    }
+  ],
+  "rules": [
+    {
+      "name": "CVE mention",
+      "keywords": [],
+      "regex": [
+        "\\bCVE-\\d{4}-\\d{4,7}\\b"
+      ],
+      "exclude_keywords": [
+        "patched long ago",
+        "fixed in"
+      ],
+      "tags": [
+        "severity:medium",
+        "category:cve"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "0-day / exploit sale chatter",
+      "keywords": [
+        "0day",
+        "0-day",
+        "zero day",
+        "private exploit",
+        "fud exploit",
+        "weaponized exploit"
+      ],
+      "regex": [
+        "\\b(selling|sell|for\\s*sale)\\b[^\\n]{0,40}\\b(0\\s*-?\\s*day|exploit|rce)\\b"
+      ],
+      "exclude_keywords": [
+        "course",
+        "tutorial",
+        "ctf writeup"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:0day"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Initial Access Broker listings",
+      "keywords": [
+        "corporate access",
+        "domain admin access",
+        "vpn access for sale",
+        "rdp access for sale",
+        "citrix access"
+      ],
+      "regex": [
+        "\\b(vpn|rdp|citrix|fortinet|fortigate|sonicwall|pulse|globalprotect)\\b[^\\n]{0,40}\\b(access|for\\s*sale|selling)\\b"
+      ],
+      "exclude_keywords": [
+        "job posting",
+        "we are hiring"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:iab"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Ransomware actor mention",
+      "keywords": [
+        "lockbit",
+        "cl0p",
+        "blackcat",
+        "alphv",
+        "black basta",
+        "akira ransomware",
+        "play ransomware",
+        "ransomhub",
+        "qilin ransomware",
+        "medusa ransomware"
+      ],
+      "regex": [],
+      "exclude_keywords": [
+        "news article",
+        "analysis"
+      ],
+      "tags": [
+        "severity:high",
+        "category:ransomware"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "Credential dump / combolist",
+      "keywords": [
+        "combolist",
+        "combo list",
+        "fresh combolist",
+        "credentials dump",
+        "database leaked",
+        "db dump"
+      ],
+      "regex": [
+        "\\b(\\d{1,3}[kKmM])\\s*(combos?|lines|emails?|accounts?)\\b",
+        "\\b(database|db)\\b[^\\n]{0,20}\\b(leaked|dumped|for\\s*sale)\\b"
+      ],
+      "exclude_keywords": [],
+      "tags": [
+        "severity:high",
+        "category:creds"
+      ],
+      "enabled": true
+    }
+  ],
+  "_rules_hint": "More curated rule packs live in examples/threat-packs/. Drop additional rules into this array as needed.",
+  "dedup": {
+    "mode": "per_source",
+    "only_on_match": true,
+    "ttl_days": 30
+  },
+  "notifications": {
+    "notification_method": "saved_messages",
+    "snippet_chars": 400,
+    "bot_chat_id": "",
+    "webhook_url": "",
+    "webhook_headers": {},
+    "webhook_timeout": 5.0
+  },
+  "logging": {
+    "enabled": true,
+    "level": "INFO",
+    "console": true,
+    "file": {
+      "enabled": true,
+      "path": "logs/telescope.log",
+      "max_bytes": 5242880,
+      "backup_count": 5
+    },
+    "redact": {
+      "enabled": true,
+      "patterns": [
+        "API_ID",
+        "API_HASH",
+        "BOT_API",
+        "PHONE",
+        "2FA"
+      ]
+    }
+  }
+}

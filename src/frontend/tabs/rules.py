@@ -41,6 +41,11 @@ class RulesTab(Container):
                             yield TextArea(id="rule-excludes")
                     yield Static("regex (one pattern per line)", classes="form-label")
                     yield TextArea(id="rule-regex")
+                    yield Static(
+                        "tags (comma-separated; use severity:critical|high|medium|low for severity)",
+                        classes="form-label",
+                    )
+                    yield Input(placeholder="severity:high, category:cve, actor:lockbit", id="rule-tags")
                     yield Static("Rule tester", id="rules-test-title")
                     yield TextArea(id="rule-test-text", placeholder="Paste text to test against rules")
                     with Horizontal(id="rules-test-actions"):
@@ -82,7 +87,8 @@ class RulesTab(Container):
     def _badge_for_rule(self, rule: dict[str, Any]) -> str:
         keywords = rule.get("keywords", []) or []
         regexes = rule.get("regex", []) or []
-        return f"keywords: {len(keywords)} regexes: {len(regexes)}"
+        tags = rule.get("tags", []) or []
+        return f"kw: {len(keywords)} rx: {len(regexes)} tags: {len(tags)}"
 
     def _get_rules(self) -> list[dict[str, Any]]:
         data = self.app.config_state.data or {}
@@ -159,6 +165,21 @@ class RulesTab(Container):
         raw_lines = [line.strip() for line in event.text_area.text.splitlines()]
         regex_list = [line for line in raw_lines if line]
         rules[index]["regex"] = regex_list
+        self._set_rules(rules)
+        self._update_table_cell(index, "badges", self._badge_for_rule(rules[index]))
+
+    @on(Input.Changed, "#rule-tags")
+    def _on_tags_changed(self, event: Input.Changed) -> None:
+        if self._loading_form:
+            return
+        index = self._current_index()
+        if index is None:
+            return
+        rules = self._get_rules()
+        if index >= len(rules):
+            return
+        parsed = [tag.strip() for tag in (event.value or "").split(",") if tag.strip()]
+        rules[index]["tags"] = parsed
         self._set_rules(rules)
         self._update_table_cell(index, "badges", self._badge_for_rule(rules[index]))
 
@@ -259,6 +280,7 @@ class RulesTab(Container):
         keywords_input = self.query_one("#rule-keywords", TextArea)
         excludes_input = self.query_one("#rule-excludes", TextArea)
         regex_input = self.query_one("#rule-regex", TextArea)
+        tags_input = self.query_one("#rule-tags", Input)
         if row_key is None:
             name_input.value = ""
             name_input.disabled = True
@@ -270,6 +292,8 @@ class RulesTab(Container):
             excludes_input.disabled = True
             regex_input.text = ""
             regex_input.disabled = True
+            tags_input.value = ""
+            tags_input.disabled = True
         else:
             index = int(row_key)
             rules = self._get_rules()
@@ -287,6 +311,8 @@ class RulesTab(Container):
             excludes_input.disabled = False
             regex_input.text = "\n".join(rule.get("regex", []) or [])
             regex_input.disabled = False
+            tags_input.value = ", ".join(rule.get("tags", []) or [])
+            tags_input.disabled = False
         self._loading_form = False
 
     def _select_row(self, index: int) -> None:
@@ -331,5 +357,6 @@ class RulesTab(Container):
             "keywords": [],
             "exclude_keywords": [],
             "regex": [],
+            "tags": [],
             "enabled": True,
         }

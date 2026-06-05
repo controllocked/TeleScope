@@ -5,6 +5,7 @@ Implements the core StoragePort using a simple SQLite database.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from typing import Optional
@@ -82,10 +83,14 @@ class SQLiteStorage:
                     rule_name TEXT,
                     reason TEXT,
                     text_snippet TEXT,
-                    permalink TEXT
+                    permalink TEXT,
+                    tags TEXT
                 )
                 """
             )
+            existing_cols = {row["name"] for row in conn.execute("PRAGMA table_info(matches)")}
+            if "tags" not in existing_cols:
+                conn.execute("ALTER TABLE matches ADD COLUMN tags TEXT")
 
     def get_last_id(self, source_key: str) -> Optional[int]:
         """Return the last processed message_id for a source, if any."""
@@ -137,6 +142,7 @@ class SQLiteStorage:
         """Persist a match to the append-only matches table."""
 
         created_at = datetime.now(timezone.utc)
+        tags_payload = json.dumps(list(match.tags)) if match.tags else None
         with self._connect() as conn:
             conn.execute(
                 """
@@ -148,8 +154,9 @@ class SQLiteStorage:
                     rule_name,
                     reason,
                     text_snippet,
-                    permalink
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    permalink,
+                    tags
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     context.source_key,
@@ -159,7 +166,8 @@ class SQLiteStorage:
                     match.rule_name,
                     match.reason,
                     match.text_snippet,
-                    context.permalink
+                    context.permalink,
+                    tags_payload,
                 ),
             )
 

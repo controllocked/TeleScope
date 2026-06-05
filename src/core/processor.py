@@ -84,6 +84,7 @@ class MessageProcessor:
                     rule_name=match.rule_name,
                     reason=match.reason,
                     text_snippet=snippet,
+                    tags=list(match.tags),
                 ),
             )
             await self._notifier.send(context, match, snippet)

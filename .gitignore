@@ -15,6 +15,8 @@ ENV/
 # IDE
 .idea/
 .vscode/
+.codex/
+.claude/
 
 # Python tooling
 .pytest_cache/
@@ -28,6 +30,9 @@ build/
 
 # Env files
 .env
+
+# Local config (contains personal sources, chat ids, and bot tokens)
+config.json
 
 # Telethon sessions
 *.session
@@ -43,6 +48,5 @@ build/
 # Logs
 *.log
 logs
-
-.codex
-skills
+exports
+config.json
