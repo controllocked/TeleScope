@@ -168,9 +168,18 @@ Adding a new delivery channel = one file in `src/adapters/` that implements
 
 ## Install
 
+For Linux
 ```bash
 python -m venv .venv
 source .venv/bin/activate
+pip install -r requirements.txt
+pip install -e .
+```
+
+For Windows
+```bash
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 ```
