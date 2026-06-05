@@ -1,4 +1,6 @@
 telethon==1.34.0
+textual==7.3.0
 python-dotenv==1.0.1
 pytest==8.2.2
+rich==14.2.0
 art

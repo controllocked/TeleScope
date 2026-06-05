@@ -1,0 +1,183 @@
+{
+  "_pack": "iab-listings",
+  "_version": "2.0",
+  "_description": "Initial Access Broker (IAB) activity - sales of corporate access (VPN, RDP, AD, webshells), enterprise stealer logs, and high-value account compromises. Uses multi-signal lookahead regex to require BOTH an access-type term AND either a sale/contact signal or a corporate-context signal (industry, revenue, geography).",
+  "rules": [
+    {
+      "_description": "Listings selling network access to a corporate environment. Two-signal lookahead: access-type term (VPN/RDP/Citrix/Fortinet/etc.) + transaction term (selling/for sale/escrow/contact/price). The geography/industry/revenue context is what distinguishes a real IAB listing from generic discussion.",
+      "_fp_risk": "Medium. Sysadmin and IT-support channels discuss VPN/RDP daily. Excludes catch help-desk and product-support framing. If you ingest IT-ops channels heavily, consider disabling and using only the IAB-corporate-context rule below.",
+      "_severity_rationale": "Critical - direct sale of corporate network access is among the highest-value TI signals.",
+      "name": "IAB - corporate access listing",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(vpn\\s+access|rdp\\s+access|ssh\\s+access|citrix\\s+access|fortinet\\s+access|fortigate\\s+access|sonicwall\\s+access|pulse\\s+secure\\s+access|globalprotect\\s+access|anyconnect\\s+access|netscaler\\s+access|domain\\s+admin\\s+access|da\\s+access|domain\\s+controller\\s+access|active\\s+directory\\s+access|ad\\s+access|corporate\\s+access|company\\s+access|network\\s+access|enterprise\\s+access|shell\\s+access|webshell\\s+access|jump\\s+host\\s+access|jumphost\\s+access)\\b)(?=.*(\\bsell(ing)?\\b|\\bfor\\s+sale\\b|\\bon\\s+sale\\b|\\bprice(d)?\\b|\\bescrow\\b|\\bguarantor\\b|\\b(dm|pm)\\s+(me|for)\\b|\\btg:?\\s*@|\\bjabber:?\\s*[a-z0-9._-]+@|\\baccept(ing)?\\s*(btc|xmr|usdt|monero)\\b|\\$\\s*\\d+\\s*k\\b|\\$\\s*\\d{3,}))"
+      ],
+      "exclude_keywords": [
+        "help desk",
+        "helpdesk",
+        "support ticket",
+        "kb article",
+        "knowledge base",
+        "documentation",
+        "official docs",
+        "training",
+        "ctf",
+        "hack the box",
+        "tryhackme",
+        "course",
+        "how to configure",
+        "how to set up",
+        "how to setup",
+        "is hiring",
+        "we are hiring",
+        "job opening",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news",
+        "thehackernews",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:iab",
+        "category:network-access",
+        "mitre:T1078",
+        "mitre:T1133"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "IAB listings with explicit victim characterization - industry vertical + revenue + geography. Real IAB listings almost always include 'US-based manufacturing company, revenue $X' style metadata to attract buyers. This rule fires when those characterizers appear together with access terms.",
+      "_fp_risk": "Low. Combination of industry vertical + revenue figure + access term rarely occurs outside actual listings. May occasionally catch business-news posts about breach victims - excludes pin obvious news framing.",
+      "_severity_rationale": "Critical - victim characterization typically only appears in active listings.",
+      "name": "IAB - victim characterization (industry + revenue + access)",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(manufacturing|healthcare|finance|financial\\s+services|insurance|law\\s+firm|legal\\s+services|government|municipal|education|university|retail|energy|oil\\s+and\\s+gas|utilities|telecom|telecommunications|aerospace|defense|logistics|transportation|hospitality)\\b)(?=.*\\b(revenue|annual\\s+revenue|sales\\s+of)\\b)(?=.*\\b(access|vpn|rdp|domain\\s+admin|da|webshell|shell|network|ad\\b)\\b)",
+        "(?is)(?=.*\\b(us-?based|uk-?based|eu-?based|german|french|italian|spanish|dach\\s+region|nordic|benelux|apac|latam|gcc|middle\\s+east)\\b)(?=.*\\$\\s*\\d+\\s*[mMbB]\\b)(?=.*\\b(access|compromised|network|domain)\\b)"
+      ],
+      "exclude_keywords": [
+        "breach disclosure",
+        "press release",
+        "investor relations",
+        "annual report",
+        "filed with",
+        "according to the company",
+        "company statement",
+        "spokesperson said",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:iab",
+        "category:victim-context",
+        "mitre:T1078"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Stealer logs targeted at corporate use - fresh credentials/cookies/sessions from infostealers, sorted for enterprise SSO targets (Okta, Azure AD, Google Workspace, GitHub, Salesforce, AWS, GCP, Azure portal).",
+      "_fp_risk": "Low-medium. Mature infostealer marketplaces use this language consistently. Excludes catch defensive YARA/detection content and CTF challenges.",
+      "_severity_rationale": "High - corporate-grade stealer logs enable credential-stuffing and session-hijack attacks on enterprise SaaS.",
+      "name": "IAB - corporate stealer logs / cookie shop",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(redline|lumma|vidar|raccoon|stealc|metastealer|rhadamanthys|aurora|atomic|amos|risepro|nexus\\s+stealer)\\b)(?=.*\\b(corporate|enterprise|business|fresh|valid|premium|uhq|hq|cloud)\\b)",
+        "(?is)(?=.*\\b(okta|azure\\s+ad|entra|microsoft\\s+365|m365|google\\s+workspace|gsuite|salesforce|aws\\s+console|gcp\\s+console|azure\\s+portal|jumpcloud|onelogin|duo)\\b)(?=.*\\b(cookies|sessions|tokens|logs|creds|credentials|account|stealer)\\b)(?=.*\\b(fresh|valid|sale|sell(ing)?|for\\s*sale|price|shop|marketplace)\\b)"
+      ],
+      "exclude_keywords": [
+        "detection rule",
+        "yara rule",
+        "yara signature",
+        "ioc list",
+        "threat report",
+        "analysis report",
+        "malware analysis",
+        "training",
+        "course",
+        "ctf",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:iab",
+        "category:stealer-logs",
+        "mitre:T1539",
+        "mitre:T1555"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "High-value account access - domain admin, AD compromise, cloud root/global admin sold directly. Distinguished from the general access-listing rule by elevated-privilege language. These are post-compromise listings (attacker already inside).",
+      "_fp_risk": "Low. 'Domain admin for sale' or 'global admin compromised' is rare jargon outside underground.",
+      "_severity_rationale": "Critical - privileged access dramatically shortens the kill-chain for the buyer.",
+      "name": "IAB - privileged account access for sale",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(domain\\s+admin|enterprise\\s+admin|global\\s+admin|tenant\\s+admin|root\\s+account|root\\s+access|aws\\s+root|gcp\\s+owner|azure\\s+global\\s+admin|kerberos\\s+ticket|golden\\s+ticket|silver\\s+ticket|krbtgt|dcsync)\\b)(?=.*(\\bsell(ing)?\\b|\\bfor\\s+sale\\b|\\bprice(d)?\\b|\\bescrow\\b|\\b(dm|pm)\\s+(me|for)\\b|\\baccess\\s+available\\b|\\bcompromised\\b|\\backquired\\b))"
+      ],
+      "exclude_keywords": [
+        "training",
+        "ctf",
+        "hack the box",
+        "tryhackme",
+        "boot2root",
+        "lab environment",
+        "intentionally vulnerable",
+        "writeup",
+        "course",
+        "academy",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers",
+        "talos report"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:iab",
+        "category:privileged-access",
+        "mitre:T1078.002",
+        "mitre:T1078.004"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Webshell, cPanel, WHM, and direct application-tier access listings. These are lower in the privilege hierarchy than network access but still actionable for buyers.",
+      "_fp_risk": "Low-medium. Hosting-provider support channels discuss cPanel/WHM frequently - excludes pin support framing.",
+      "_severity_rationale": "High - application-tier access is commonly the foothold for further compromise.",
+      "name": "IAB - webshell / panel access",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(webshell|web\\s+shell|cpanel|whm|plesk|directadmin|ispconfig|cyberpanel|admin\\s+panel|wp-admin|wordpress\\s+admin)\\b)(?=.*(\\bsell(ing)?\\b|\\bfor\\s+sale\\b|\\bprice(d)?\\b|\\bshop\\b|\\bmarketplace\\b|\\bfresh\\b|\\bvalid\\b|\\bpremium\\b|\\b(dm|pm)\\s+(me|for)\\b|\\baccept(ing)?\\s*(btc|xmr)\\b))"
+      ],
+      "exclude_keywords": [
+        "support ticket",
+        "help desk",
+        "helpdesk",
+        "knowledge base",
+        "kb article",
+        "documentation",
+        "how to install",
+        "how to configure",
+        "how to setup",
+        "tutorial",
+        "training",
+        "course",
+        "ctf",
+        "writeup"
+      ],
+      "tags": [
+        "severity:high",
+        "category:iab",
+        "category:webshell",
+        "mitre:T1505.003"
+      ],
+      "enabled": true
+    }
+  ]
+}

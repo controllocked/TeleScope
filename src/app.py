@@ -1,4 +1,4 @@
-"""Application entry point for the telescope watcher."""
+"""Application entry point for the telescope watcher"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from adapters.sqlite_storage import SQLiteStorage
 from adapters.telegram_mapper import ForumResolver, build_context
 from adapters.telegram_bot_notifier import TelegramBotNotifier
 from adapters.telegram_notifier import TelegramSavedMessagesNotifier
+from adapters.webhook_notifier import WebhookNotifier
 from client import build_client
 from core.config import DedupConfig
 from core.processor import MessageProcessor
@@ -218,8 +219,17 @@ def _run() -> None:
         )
     elif settings.NOTIFICATION_METHOD == "saved_messages":
         notifier = TelegramSavedMessagesNotifier(client, settings.SOURCE_ALIASES)
+    elif settings.NOTIFICATION_METHOD == "webhook":
+        if not settings.WEBHOOK_URL:
+            raise RuntimeError("notifications.webhook_url is required when notification_method=webhook")
+        notifier = WebhookNotifier(
+            url=settings.WEBHOOK_URL,
+            source_aliases=settings.SOURCE_ALIASES,
+            headers=settings.WEBHOOK_HEADERS,
+            timeout=settings.WEBHOOK_TIMEOUT,
+        )
     else:
-        raise RuntimeError("notification_method must be 'saved_messages' or 'bot'")
+        raise RuntimeError("notification_method must be 'saved_messages', 'bot', or 'webhook'")
     logger.info("Selected notification method - %s", settings.NOTIFICATION_METHOD)
 
     processor = MessageProcessor(

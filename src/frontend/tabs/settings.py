@@ -13,7 +13,7 @@ class SettingsTab(Container):
     """Settings tab for editing dedup, notifications, logging, and catch-up."""
 
     DEDUP_MODES = ["off", "per_source", "global"]
-    NOTIFICATION_METHODS = ["saved_messages", "bot"]
+    NOTIFICATION_METHODS = ["saved_messages", "bot", "webhook"]
     LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
 
     SECTION_LABELS = [
@@ -54,13 +54,14 @@ class SettingsTab(Container):
                             yield Input(placeholder="30", id="dedup-ttl-days")
                             yield Static("", id="dedup-error", classes="settings-error")
 
-                        with Container(id="settings-notifications"):
+                        with ScrollableContainer(id="settings-notifications"):
                             yield Static("Notifications", id="settings-title")
                             yield Static("notification_method", classes="form-label")
                             yield Select(
                                 [
                                     ("saved_messages", "saved_messages"),
                                     ("bot", "bot"),
+                                    ("webhook", "webhook"),
                                 ],
                                 id="notifications-method",
                                 allow_blank=False,
@@ -69,6 +70,12 @@ class SettingsTab(Container):
                             yield Input(placeholder="400", id="notifications-snippet")
                             yield Static("bot_chat_id", classes="form-label")
                             yield Input(placeholder="123456789", id="notifications-bot")
+                            yield Static("webhook_url", classes="form-label")
+                            yield Input(placeholder="https://hooks.example.com/intake", id="notifications-webhook-url")
+                            yield Static("webhook_headers (one per line, key: value)", classes="form-label")
+                            yield TextArea(id="notifications-webhook-headers")
+                            yield Static("webhook_timeout (seconds)", classes="form-label")
+                            yield Input(placeholder="5.0", id="notifications-webhook-timeout")
                             yield Static("", id="notifications-error", classes="settings-error")
 
                         with ScrollableContainer(id="settings-logging"):
@@ -168,6 +175,9 @@ class SettingsTab(Container):
         method = notifications.get("notification_method", "saved_messages")
         snippet_chars = notifications.get("snippet_chars", 400)
         bot_chat_id = notifications.get("bot_chat_id")
+        webhook_url = notifications.get("webhook_url", "") or ""
+        webhook_headers = notifications.get("webhook_headers") or {}
+        webhook_timeout = notifications.get("webhook_timeout", 5.0)
         self._set_select_value(
             "#notifications-method",
             method,
@@ -176,6 +186,9 @@ class SettingsTab(Container):
         )
         self.query_one("#notifications-snippet", Input).value = str(snippet_chars)
         self.query_one("#notifications-bot", Input).value = "" if bot_chat_id is None else str(bot_chat_id)
+        self.query_one("#notifications-webhook-url", Input).value = str(webhook_url)
+        self.query_one("#notifications-webhook-headers", TextArea).text = self._headers_to_text(webhook_headers)
+        self.query_one("#notifications-webhook-timeout", Input).value = str(webhook_timeout)
         self._apply_notifications_state(method)
         self._set_error("notifications-error", "")
 
@@ -228,6 +241,10 @@ class SettingsTab(Container):
     def _apply_notifications_state(self, method: str) -> None:
         bot_input = self.query_one("#notifications-bot", Input)
         bot_input.disabled = method != "bot"
+        is_webhook = method == "webhook"
+        self.query_one("#notifications-webhook-url", Input).disabled = not is_webhook
+        self.query_one("#notifications-webhook-headers", TextArea).disabled = not is_webhook
+        self.query_one("#notifications-webhook-timeout", Input).disabled = not is_webhook
 
     def _apply_logging_state(self, file_enabled: bool, redact_enabled: bool) -> None:
         self.query_one("#logging-file-path", Input).disabled = not file_enabled
@@ -283,6 +300,73 @@ class SettingsTab(Container):
         else:
             notifications.pop("bot_chat_id", None)
         self._update_section("notifications", notifications)
+
+    @on(Input.Changed, "#notifications-webhook-url")
+    def _on_notifications_webhook_url(self, event: Input.Changed) -> None:
+        if self._loading_form:
+            return
+        notifications = self._get_section("notifications")
+        value = event.value.strip()
+        if value:
+            notifications["webhook_url"] = value
+        else:
+            notifications.pop("webhook_url", None)
+        self._update_section("notifications", notifications)
+
+    @on(TextArea.Changed, "#notifications-webhook-headers")
+    def _on_notifications_webhook_headers(self, event: TextArea.Changed) -> None:
+        if self._loading_form:
+            return
+        headers = self._parse_headers_text(event.text_area.text)
+        notifications = self._get_section("notifications")
+        if headers:
+            notifications["webhook_headers"] = headers
+        else:
+            notifications.pop("webhook_headers", None)
+        self._update_section("notifications", notifications)
+
+    @on(Input.Changed, "#notifications-webhook-timeout")
+    def _on_notifications_webhook_timeout(self, event: Input.Changed) -> None:
+        if self._loading_form:
+            return
+        stripped = event.value.strip()
+        notifications = self._get_section("notifications")
+        if not stripped:
+            notifications.pop("webhook_timeout", None)
+            self._update_section("notifications", notifications)
+            self._set_error("notifications-error", "")
+            return
+        try:
+            parsed = float(stripped)
+        except ValueError:
+            self._set_error("notifications-error", "webhook_timeout must be a number")
+            return
+        if parsed <= 0:
+            self._set_error("notifications-error", "webhook_timeout must be positive")
+            return
+        notifications["webhook_timeout"] = parsed
+        self._update_section("notifications", notifications)
+        self._set_error("notifications-error", "")
+
+    @staticmethod
+    def _headers_to_text(headers: dict[str, str]) -> str:
+        if not isinstance(headers, dict):
+            return ""
+        return "\n".join(f"{key}: {value}" for key, value in headers.items())
+
+    @staticmethod
+    def _parse_headers_text(text: str) -> dict[str, str]:
+        result: dict[str, str] = {}
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped or ":" not in stripped:
+                continue
+            key, _, value = stripped.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if key:
+                result[key] = value
+        return result
 
     @on(Switch.Changed, "#catchup-enabled")
     def _on_catchup_enabled(self, event: Switch.Changed) -> None:

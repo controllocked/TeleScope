@@ -1,0 +1,222 @@
+{
+  "_pack": "0day-marketplace",
+  "_version": "2.0",
+  "_description": "0-day and exploit marketplace activity on Telegram. Rules use multi-signal lookahead regex (require BOTH a target term AND a transaction/context term) to suppress vendor advisories, security news, defender chatter, and CTF/learning content. See examples/threat-packs/README.md for detection logic and known FP risks.",
+  "rules": [
+    {
+      "_description": "Direct sale offer: someone is offering a private exploit or 0-day. Requires BOTH (1) an exploit/0-day term AND (2) a transactional signal - sale verb, pricing language, escrow, contact-ask, or crypto payment. Excludes vendor-advisory and defender-discussion phrasing.",
+      "_fp_risk": "Medium-low. Will fire on roleplay/scam offers (which is actually OK - those are still TI signals). Tune excludes if your corpus contains many CTF/training channels.",
+      "_severity_rationale": "Critical - confirmed sale intent for offensive capability.",
+      "name": "0day - direct sale offer",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(0\\s*-?\\s*day|zero[-\\s]?day|weaponized\\s+exploit|fud\\s+exploit|private\\s+exploit|priv\\s+exploit|rce\\s+exploit|lpe\\s+exploit|sandbox\\s+escape|kernel\\s+exploit|preauth\\s+rce|pre-auth\\s+rce|unauthenticated\\s+rce)\\b)(?=.*(\\bsell(ing)?\\b|\\bfor\\s+sale\\b|\\bon\\s+sale\\b|\\bprice(d)?\\b|\\bpay(ing|ment)\\s+(in|via)\\s+(btc|xmr|monero|usdt|crypto)\\b|\\bescrow\\b|\\bguarantor\\b|\\b(dm|pm)\\s+(me|for)\\b|\\btg:?\\s*@|\\btelegram:?\\s*@|\\bjabber:?\\s*[a-z0-9._-]+@|\\bxmpp:?\\s*[a-z0-9._-]+@|\\$\\s*\\d{2,}\\s*k\\b|\\$\\s*\\d{3,}))"
+      ],
+      "exclude_keywords": [
+        "vendor advisory",
+        "responsible disclosure",
+        "responsibly disclosed",
+        "patch available",
+        "patched in version",
+        "fixed in version",
+        "cvss score",
+        "according to researchers",
+        "researchers found",
+        "researchers said",
+        "project zero",
+        "google tag",
+        "citizen lab",
+        "krebsonsecurity",
+        "bleeping computer",
+        "bleepingcomputer",
+        "the hacker news",
+        "thehackernews",
+        "ctf challenge",
+        "ctf writeup",
+        "boot2root",
+        "hack the box",
+        "hackthebox",
+        "tryhackme",
+        "yara rule",
+        "detection rule",
+        "how to defend",
+        "blue team writeup",
+        "security course",
+        "training material"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:0day",
+        "category:exploit-sale",
+        "mitre:T1588.005"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Chatter about exploits for high-impact products - anything mentioning a critical attack primitive (preauth RCE, sandbox escape, kernel exploit, 0-click, hypervisor escape, jailbreak) against a high-value product (major browsers, edge appliances, hypervisors, popular enterprise apps). Two-signal lookahead: product term + critical primitive term.",
+      "_fp_risk": "Medium. CVE-assigned + patched issues will fire unless the excludes catch the vendor/news framing. Tune the excludes if you ingest many security-news channels.",
+      "_severity_rationale": "Critical - even chatter (not yet for sale) about working exploits for these targets is high-priority TI.",
+      "name": "0day - high-impact product chatter",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(chrome|chromium|edge|safari|webkit|firefox|gecko|outlook|exchange|microsoft\\s+teams|onedrive|sharepoint|adobe\\s+reader|acrobat|microsoft\\s+defender|defender\\s+for\\s+endpoint|vmware\\s+esxi|esxi|vcenter|hyper-?v|fortigate|fortinet|palo\\s+alto|panos|globalprotect|cisco\\s+asa|cisco\\s+ftd|ivanti|connect\\s+secure|pulse\\s+secure|netscaler|citrix\\s+adc|big-?ip|f5\\s+big-?ip|sonicwall|sonicos|junos|juniper|cisco\\s+ios\\s+xe|windows\\s+kernel|linux\\s+kernel|ios\\s+kernel|android\\s+kernel|samsung\\s+knox)\\b)(?=.*\\b(0\\s*-?\\s*day|zero[-\\s]?day|0\\s*click|zero[-\\s]click|preauth\\s+rce|pre-auth\\s+rce|unauth(enticated)?\\s+rce|sandbox\\s+escape|kernel\\s+(rce|exploit|lpe)|root\\s+exploit|jailbreak\\s+exploit|hypervisor\\s+escape|guest[-\\s]to[-\\s]host|vm\\s+escape|auth(entication)?\\s+bypass)\\b)"
+      ],
+      "exclude_keywords": [
+        "patched in",
+        "fixed in version",
+        "vendor advisory",
+        "security advisory",
+        "advisory published",
+        "responsible disclosure",
+        "responsibly disclosed",
+        "project zero blog",
+        "google project zero",
+        "google security blog",
+        "citizen lab report",
+        "amnesty report",
+        "talos blog",
+        "according to researchers",
+        "researchers from",
+        "bug bounty report",
+        "hackerone report",
+        "writeup",
+        "ctf",
+        "training",
+        "course",
+        "academy",
+        "tutorial"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:0day",
+        "category:high-impact-product"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Buyer-side: exploit brokers or actors soliciting private exploits. Two-signal lookahead: explicit buy/acquire/payout intent + exploit/0-day target term. Recognizes commercial broker names (Crowdfense, Trenchant, etc.) as additional hits.",
+      "_fp_risk": "Medium. Bug bounty platforms use overlapping language ('we pay up to'). Excludes pin platform names (HackerOne, Bugcrowd) since they are NOT underground. Adjust if you want broker activity from those platforms tracked separately.",
+      "_severity_rationale": "High - broker activity signals demand; not as actionable as a confirmed sale but worth tracking.",
+      "name": "0day - exploit broker / acquisition",
+      "keywords": [
+        "zerodium",
+        "crowdfense",
+        "trenchant",
+        "exodus intelligence",
+        "ssd labs",
+        "ssd secure disclosure",
+        "intel exploit acquisition",
+        "operation zero",
+        "azimuth security"
+      ],
+      "regex": [
+        "(?is)(?=.*\\b(buying|we\\s+buy|will\\s+buy|looking\\s+to\\s+(buy|acquire|purchase)|acquir(e|ing)|we\\s+pay\\s+up\\s+to|paying\\s+up\\s+to|bounty\\s+up\\s+to|payout(s)?\\s+up\\s+to|million\\s+payout)\\b)(?=.*\\b(0\\s*-?\\s*day|zero[-\\s]?day|exploit|rce|lpe|sandbox\\s+escape|jailbreak|root\\s+exploit|kernel\\s+exploit|preauth\\s+rce|n[-\\s]?day)\\b)"
+      ],
+      "exclude_keywords": [
+        "hackerone",
+        "bugcrowd",
+        "intigriti",
+        "yeswehack",
+        "synack",
+        "official bug bounty program",
+        "open bug bounty",
+        "responsible disclosure",
+        "submit to vendor",
+        "report to vendor",
+        "vdp",
+        "ctf",
+        "training",
+        "krebsonsecurity",
+        "bleeping computer",
+        "bleepingcomputer",
+        "the hacker news",
+        "thehackernews",
+        "according to researchers",
+        "researchers from",
+        "wrote about",
+        "reported by",
+        "blog post"
+      ],
+      "tags": [
+        "severity:high",
+        "category:0day",
+        "category:exploit-broker"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Public weaponization: PoC released, exploit code dropped, or in-the-wild exploitation reported. Two-signal lookahead: release/ITW language + CVE/product target. This is distinct from .direct-sale (here the artifact is public, not for sale).",
+      "_fp_risk": "Low-medium. Will fire on legitimate research drops (e.g. Project Zero). Excludes catch CTF/training/course content. Defenders may want this anyway - it's actionable for patching prioritization.",
+      "_severity_rationale": "High - public PoC dramatically lowers attacker skill bar; ITW = active exploitation.",
+      "name": "0day - public PoC / ITW",
+      "keywords": [
+        "exploited in the wild",
+        "exploitation in the wild",
+        "active exploitation",
+        "mass exploitation",
+        "en masse exploitation"
+      ],
+      "regex": [
+        "(?is)(?=.*\\b((poc|exploit\\s+code|exploit)\\s+(released|dropped|published|public|on\\s+github|now\\s+public)|weaponized|now\\s+weaponized|in\\s+the\\s+wild|ITW\\b|metasploit\\s+module\\s+(merged|added|available)|nuclei\\s+template\\s+(added|available))\\b)(?=.*\\b(CVE-\\d{4}-\\d{4,7}|0\\s*-?\\s*day|zero[-\\s]?day|chrome|firefox|safari|outlook|exchange|sharepoint|fortinet|fortigate|citrix|netscaler|esxi|vcenter|confluence|jira|gitlab|jenkins|moveit|ivanti|palo\\s+alto|sonicwall|veeam|cisco|juniper|f5\\s+big-?ip|big-?ip)\\b)"
+      ],
+      "exclude_keywords": [
+        "ctf",
+        "writeup",
+        "tutorial",
+        "course",
+        "academy",
+        "training",
+        "boot2root",
+        "hack the box",
+        "tryhackme",
+        "lab environment",
+        "intentionally vulnerable",
+        "vulnerable by design",
+        "before public release",
+        "embargo"
+      ],
+      "tags": [
+        "severity:high",
+        "category:cve",
+        "category:public-poc",
+        "category:itw"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "0-click / zero-interaction exploit chatter - typically iMessage, WhatsApp, Outlook, Teams. These are the highest-value mobile/messaging exploits (Pegasus-class). Single-signal regex by design - zero-click language alone is rare enough to justify alerting.",
+      "_fp_risk": "Low. 'Zero-click' is rare jargon outside actual research/intel discussion. Excludes catch news framing.",
+      "_severity_rationale": "Critical - zero-click capability is at the top of the exploit value pyramid.",
+      "name": "0day - 0-click exploit chatter",
+      "keywords": [],
+      "regex": [
+        "(?is)\\b(0\\s*-?\\s*click|zero[-\\s]?click|no[-\\s]interaction|interaction-?less)\\s+(exploit|rce|chain|attack|targeting|on|for|against|imessage|whatsapp|outlook|teams|messenger)\\b",
+        "(?is)\\b(imessage|whatsapp|outlook|teams|telegram|signal)\\s+0\\s*-?\\s*click\\b"
+      ],
+      "exclude_keywords": [
+        "citizen lab",
+        "amnesty",
+        "according to researchers",
+        "researchers from",
+        "lookout reports",
+        "responsibly disclosed",
+        "patched in",
+        "advisory published",
+        "krebsonsecurity",
+        "bleeping computer",
+        "bleepingcomputer",
+        "wrote about",
+        "reported by",
+        "blog post",
+        "project zero"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:0day",
+        "category:zero-click",
+        "actor-class:nation-state"
+      ],
+      "enabled": true
+    }
+  ]
+}

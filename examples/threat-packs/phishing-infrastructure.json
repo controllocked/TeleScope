@@ -1,0 +1,185 @@
+{
+  "_pack": "phishing-infrastructure",
+  "_version": "1.0",
+  "_description": "Phishing kits, Adversary-in-the-Middle (AitM) panels, SMTP/letter sender services, smishing infrastructure, and typosquat domain chatter. Distinguished from malware-raas pack (which covers payloads); this pack focuses on credential-harvesting delivery infrastructure.",
+  "rules": [
+    {
+      "_description": "Phishing kit / scampage commercial chatter. Two-signal lookahead: kit/page/panel term + commercial context.",
+      "_fp_risk": "Low-medium. Excludes catch defender / research framing.",
+      "_severity_rationale": "High - phishing kits underpin a large share of credential-theft activity.",
+      "name": "Phishing - kit / scampage sale",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(phishing\\s+(kit|page|panel|template)|scam\\s+(page|panel|kit)|scampage|fake\\s+(login|portal)\\s+page|landing\\s+page\\s+for\\s+phishing|clone\\s+(of|for)\\s+(office|microsoft|gmail|outlook|bank))\\b)(?=.*\\b(sell(ing)?|for\\s*sale|subscription|monthly|lifetime|license|fresh|fud|undetected|\\$\\s*\\d+\\s*(/|per)?\\s*(month|year|build))\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "academy",
+        "ctf",
+        "writeup",
+        "yara rule",
+        "detection rule",
+        "blue team",
+        "purple team",
+        "red team engagement",
+        "phishing simulation",
+        "knowbe4",
+        "kb4",
+        "proofpoint training",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:phishing",
+        "category:phishing-kit",
+        "mitre:T1566.002",
+        "mitre:T1583.008"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Adversary-in-the-Middle (AitM) panel sales - EvilGinx, Tycoon 2FA, Storm-1011 / Evilproxy / Mamba 2FA / Rockstar 2FA / Greatness. These bypass MFA by relaying real-time sessions.",
+      "_fp_risk": "Low. AitM panel names are distinctive jargon.",
+      "_severity_rationale": "Critical - AitM kits bypass MFA, the most impactful evolution in credential-theft tooling.",
+      "name": "Phishing - AitM / MFA-bypass panel",
+      "keywords": [
+        "evilginx",
+        "evilproxy",
+        "tycoon 2fa",
+        "mamba 2fa",
+        "rockstar 2fa",
+        "muraena",
+        "modlishka",
+        "greatness phishing",
+        "storm-1011",
+        "naked pages"
+      ],
+      "regex": [
+        "(?is)(?=.*\\b(aitm|adversary[-\\s]in[-\\s]the[-\\s]middle|mfa\\s+bypass|2fa\\s+bypass|session\\s+hijack|cookie\\s+capture|reverse\\s+proxy\\s+phishing)\\b)(?=.*\\b(sell(ing)?|for\\s*sale|subscription|monthly|kit|panel|builder|access|license)\\b)"
+      ],
+      "exclude_keywords": [
+        "training",
+        "course",
+        "academy",
+        "official",
+        "open source github",
+        "red team engagement",
+        "phishing simulation",
+        "purple team",
+        "blue team writeup",
+        "yara rule",
+        "detection rule",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers",
+        "research blog",
+        "ctf",
+        "writeup",
+        "lab environment",
+        "boot2root",
+        "hack the box",
+        "tryhackme"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:phishing",
+        "category:aitm",
+        "mitre:T1557",
+        "mitre:T1539"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Letter sender / SMTP / inbox-delivery services for phishing campaigns. Two-signal lookahead: SMTP/sender/inbox-tooling term + commercial context.",
+      "_fp_risk": "Low-medium. Email marketing platforms use similar language; excludes pin obvious commercial-platform framing.",
+      "_severity_rationale": "High - bulk inbox delivery is the bottleneck for phishing campaigns.",
+      "name": "Phishing - letter sender / SMTP service",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(smtp\\s+(for\\s+sale|sender|service|inbox)|letter\\s+sender|inbox\\s+sender|mailer|bulletproof\\s+smtp|inbox\\s+to\\s+inbox|spoofed\\s+sender|cracked\\s+smtp|aws\\s+ses\\s+access|sendgrid\\s+(access|account))\\b)(?=.*\\b(sell(ing)?|for\\s*sale|subscription|monthly|fresh|inbox\\s+hit|inbox\\s+rate|hits|fud)\\b)"
+      ],
+      "exclude_keywords": [
+        "official sendgrid",
+        "official mailchimp",
+        "mailchimp documentation",
+        "sendgrid documentation",
+        "aws ses documentation",
+        "training",
+        "course",
+        "ctf",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:phishing",
+        "category:smtp-sender",
+        "mitre:T1566.001"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "SMS smishing infrastructure - smishing kits, bulk SMS gateways, lookup of carriers / SS7 chatter. Two-signal lookahead: smishing/SMS-attack term + commercial context.",
+      "_fp_risk": "Low. Smishing kits are distinctive jargon.",
+      "_severity_rationale": "High - smishing has become a major attack vector, especially in banking fraud.",
+      "name": "Phishing - smishing / SMS infrastructure",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(smishing\\s+(kit|panel|service)|sms\\s+phishing|bulk\\s+sms|sms\\s+sender|sms\\s+gateway\\s+(for\\s+sale|cracked)|spoofed\\s+sms|smpp\\s+(for\\s+sale|cracked)|ss7\\s+(access|exploit|service))\\b)(?=.*\\b(sell(ing)?|for\\s*sale|subscription|monthly|fresh|inbox\\s+rate|fud)\\b)"
+      ],
+      "exclude_keywords": [
+        "official twilio",
+        "twilio documentation",
+        "aws sns documentation",
+        "training",
+        "course",
+        "ctf",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:phishing",
+        "category:smishing",
+        "mitre:T1660"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Typosquat / lookalike domain registration chatter - discussion of newly registered phishing domains targeting specific brands. Two-signal lookahead: typosquat/lookalike/homograph term + actionable framing (just registered, available, drop, sale).",
+      "_fp_risk": "Medium. Domain-research and brand-protection vendors use similar language; excludes pin research framing.",
+      "_severity_rationale": "Medium-high - typosquat registration is an early indicator of campaign preparation.",
+      "name": "Phishing - typosquat / lookalike domain",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(typosquat|typo\\s+squat|lookalike\\s+domain|look-alike\\s+domain|homograph\\s+(domain|attack)|punycode\\s+domain|idn\\s+homograph|impersonation\\s+domain|squatting)\\b)(?=.*\\b(registered|just\\s+registered|newly\\s+registered|available|drop|expire|for\\s*sale|sell(ing)?|catch\\s+drop)\\b)"
+      ],
+      "exclude_keywords": [
+        "blog post",
+        "research blog",
+        "according to researchers",
+        "doublepulsar",
+        "yara rule",
+        "detection rule",
+        "training",
+        "course",
+        "ctf",
+        "krebsonsecurity",
+        "bleeping computer",
+        "domaintools blog"
+      ],
+      "tags": [
+        "severity:medium",
+        "category:phishing",
+        "category:typosquat",
+        "mitre:T1583.001"
+      ],
+      "enabled": true
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import re
 from typing import Iterable, List
 
@@ -16,6 +16,7 @@ class Rule:
     exclude_keywords: List[str]
     regex_patterns: List[re.Pattern]
     raw_regex: List[str]
+    tags: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -24,6 +25,7 @@ class RuleMatch:
 
     rule_name: str
     reason: str
+    tags: List[str] = field(default_factory=list)
 
 
 def build_rules(rules_config: Iterable[dict]) -> List[Rule]:
@@ -41,6 +43,7 @@ def build_rules(rules_config: Iterable[dict]) -> List[Rule]:
         exclude_keywords = [k.lower() for k in rule.get("exclude_keywords", [])]
         raw_regex = rule.get("regex", []) or []
         regex_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in raw_regex]
+        tags = [str(t).strip() for t in rule.get("tags", []) or [] if str(t).strip()]
         compiled.append(
             Rule(
                 name=rule["name"],
@@ -48,6 +51,7 @@ def build_rules(rules_config: Iterable[dict]) -> List[Rule]:
                 exclude_keywords=exclude_keywords,
                 regex_patterns=regex_patterns,
                 raw_regex=raw_regex,
+                tags=tags,
             )
         )
     return compiled
@@ -82,6 +86,6 @@ def match_rules(text: str, rules: Iterable[Rule]) -> List[RuleMatch]:
             reason_parts.append(f"regex: {', '.join(sorted(set(regex_hits)))}")
 
         reason = "\n".join(reason_parts)
-        matches.append(RuleMatch(rule_name=rule.name, reason=reason))
+        matches.append(RuleMatch(rule_name=rule.name, reason=reason, tags=list(rule.tags)))
 
     return matches

@@ -12,6 +12,31 @@ from core.models import MessageContext
 from core.rules_engine import RuleMatch
 
 
+_SEVERITY_LABELS = {
+    "critical": "CRITICAL",
+    "high": "HIGH",
+    "medium": "MED",
+    "med": "MED",
+    "low": "LOW",
+    "info": "INFO",
+}
+
+
+def extract_severity_label(tags: list[str]) -> str | None:
+    """Return a normalized severity label parsed from `severity:<level>` tag, if any."""
+
+    for tag in tags or []:
+        if ":" not in tag:
+            continue
+        prefix, _, value = tag.partition(":")
+        if prefix.strip().lower() != "severity":
+            continue
+        normalized = value.strip().lower()
+        if normalized in _SEVERITY_LABELS:
+            return _SEVERITY_LABELS[normalized]
+    return None
+
+
 def format_source_label(context: MessageContext, source_aliases: dict[str, str]) -> str:
     """Return a human-friendly source label, using configured aliases."""
 
@@ -55,10 +80,14 @@ def _format_markdown(
         return value
 
     timestamp = context.date.astimezone().strftime("%H:%M:%S %d-%m-%Y").strip()
+    severity = extract_severity_label(match.tags)
     rule_name = escape_md(match.rule_name)
+    if severity:
+        rule_name = f"\\[{severity}\\] {rule_name}"
     source = escape_md(format_source_label(context, source_aliases))
     reason = escape_md(match.reason)
     excerpt = escape_md(snippet)
+    tags_line = escape_md(", ".join(match.tags)) if match.tags else ""
 
     divider = "──────────────"
 
@@ -66,13 +95,17 @@ def _format_markdown(
         f"[{timestamp}]",
         f"**Rule:**   {rule_name}",
         f"**Source:** {source}",
+    ]
+    if tags_line:
+        lines.append(f"**Tags:**   {tags_line}")
+    lines.extend([
         divider,
         "",
         excerpt,
         "",
         "**Why:**",
         reason,
-    ]
+    ])
 
     if context.permalink:
         lines.extend(["", "**Link:**", context.permalink])
@@ -92,22 +125,30 @@ def _format_html(
     """Create the HTML notification body used by the Bot API adapter."""
 
     timestamp = html.escape(context.date.astimezone().strftime("%H:%M:%S %d-%m-%Y").strip())
+    severity = extract_severity_label(match.tags)
     rule_name = html.escape(match.rule_name)
+    if severity:
+        rule_name = f"[{html.escape(severity)}] {rule_name}"
     source = html.escape(format_source_label(context, source_aliases))
     reason = html.escape(match.reason)
     excerpt = html.escape(snippet)
+    tags_line = html.escape(", ".join(match.tags)) if match.tags else ""
 
     parts = [
         f"[{timestamp}]",
         f"<b>Rule:</b> {rule_name}",
         f"<b>Source:</b> {source}",
+    ]
+    if tags_line:
+        parts.append(f"<b>Tags:</b> {tags_line}")
+    parts.extend([
         "──────────────",
         "",
         excerpt,
         "",
         "<b>Why:</b>",
         reason,
-    ]
+    ])
 
     if context.permalink:
         safe_link = html.escape(context.permalink)

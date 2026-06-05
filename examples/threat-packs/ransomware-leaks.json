@@ -1,0 +1,148 @@
+{
+  "_pack": "ransomware-leaks",
+  "_version": "2.0",
+  "_description": "Ransomware groups, leak-site postings, affiliate recruitment, and extortion countdowns. Distinguishes actual underground activity from news coverage by requiring an action term (published/leaked/timer/recruiting) alongside group/actor names, instead of firing on bare mentions.",
+  "rules": [
+    {
+      "_description": "Leak-site posting: a ransomware group has published or is threatening to publish stolen data. Two-signal lookahead: action verb (published/leaked/posted/timer/countdown/deadline) + ransomware context (group name, .onion link, 'leak site', or 'data leak').",
+      "_fp_risk": "Low-medium. News coverage of leak-site activity uses similar language - excludes pin obvious news framing (KrebsOnSecurity, BleepingComputer, etc.).",
+      "_severity_rationale": "Critical - leak-site posting indicates an active extortion event with potential downstream impact.",
+      "name": "Ransomware - leak site posting",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(published|posted|leaked|uploaded|disclosed|dropped|publishing\\s+(soon|in)|will\\s+publish|deadline\\s+(expired|reached)|timer\\s+(expired|ended)|countdown\\s+(ended|expired))\\b)(?=.*\\b(lockbit|cl0p|clop|blackcat|alphv|black\\s+basta|blackbasta|akira|play\\s+ransomware|royal\\s+ransomware|rhysida|8base|medusa|qilin|ragnar\\s+locker|noescape|dragonforce|ransomhub|incransom|incransom?ware|hunters\\s+international|cactus|3am|trinity|sarcoma|funksec|kairos|leak\\s+site|leak\\s+blog|data\\s+leak\\s+site|extortion\\s+site|tor\\s+leak)\\b)",
+        "(?is)(?=.*\\.onion\\b)(?=.*\\b(leak|extortion|ransomware|publishing|countdown|deadline|victim|published)\\b)"
+      ],
+      "exclude_keywords": [
+        "krebsonsecurity",
+        "krebs on security",
+        "bleeping computer",
+        "bleepingcomputer",
+        "the hacker news",
+        "thehackernews",
+        "the record",
+        "therecord",
+        "according to researchers",
+        "researchers from",
+        "talos blog",
+        "mandiant report",
+        "crowdstrike report",
+        "advisory published",
+        "press release",
+        "spokesperson",
+        "official statement",
+        "company statement",
+        "training",
+        "ctf",
+        "tabletop exercise"
+      ],
+      "tags": [
+        "severity:critical",
+        "category:ransomware",
+        "category:leak-site",
+        "mitre:T1486",
+        "mitre:T1657"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Affiliate / pentester recruitment by ransomware groups. Two-signal lookahead: recruitment verb + ransomware operation language (RaaS, affiliate program, percentage split, ransom share).",
+      "_fp_risk": "Low. 'Recruiting pentesters' + 'RaaS affiliate' is not a phrasing legitimate companies use.",
+      "_severity_rationale": "High - recruitment signals operational expansion of a ransomware program.",
+      "name": "Ransomware - affiliate recruitment",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(recruiting|looking\\s+for|hiring|join\\s+our|join\\s+the|seeking|need(ed)?\\s+experienced)\\b)(?=.*\\b(pentester|penetration\\s+tester|operator|affiliate(s)?|partner|network\\s+intruder|access\\s+broker|teamwork|profit\\s+share)\\b)(?=.*\\b(ransomware|raas|locker|encryptor|leak\\s+site|ransom|extortion|\\d{2,3}\\s*%|profit\\s+share)\\b)"
+      ],
+      "exclude_keywords": [
+        "we are hiring",
+        "company is hiring",
+        "official career",
+        "careers page",
+        "linkedin",
+        "indeed",
+        "remote-friendly",
+        "salary",
+        "benefits package",
+        "training",
+        "course",
+        "ctf",
+        "writeup",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:ransomware",
+        "category:recruitment",
+        "mitre:T1583"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Extortion timer / countdown / deadline messaging - common in double-extortion campaigns. Two-signal lookahead: timer/deadline language + ransom/victim context.",
+      "_fp_risk": "Low-medium. Marketing copy uses 'countdown' and 'deadline'. Excludes pin obvious commerce framing.",
+      "_severity_rationale": "High - active countdown signals time-sensitive event affecting a victim.",
+      "name": "Ransomware - extortion countdown",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(\\d+\\s*(hours?|days?)\\s+(left|remaining|until)|countdown|timer|deadline\\s+(in|on|by)|publishing\\s+in\\s+\\d+|\\d+\\s+hour\\s+ultimatum)\\b)(?=.*\\b(ransom|extortion|leak|publish(ed|ing)?|victim|stolen\\s+data|exfiltrat(ed|ion)|negotiation)\\b)"
+      ],
+      "exclude_keywords": [
+        "sale ends",
+        "promotion ends",
+        "offer ends",
+        "registration deadline",
+        "submission deadline",
+        "early bird",
+        "limited time offer",
+        "marketing campaign",
+        "krebsonsecurity",
+        "bleeping computer",
+        "the hacker news"
+      ],
+      "tags": [
+        "severity:high",
+        "category:ransomware",
+        "category:extortion",
+        "mitre:T1657"
+      ],
+      "enabled": true
+    },
+    {
+      "_description": "Ransomware-as-a-Service (RaaS) builder / panel / decryptor sales. Two-signal lookahead: RaaS/builder/panel/decryptor + commercial language (subscription, lifetime, monthly, build access).",
+      "_fp_risk": "Low. RaaS builder sales use distinctive jargon not present in legitimate software contexts.",
+      "_severity_rationale": "High - operational artifact distribution signals the spread of ransomware capability.",
+      "name": "Ransomware - RaaS builder / panel sale",
+      "keywords": [],
+      "regex": [
+        "(?is)(?=.*\\b(ransomware\\s+(builder|panel|kit|source|stub)|locker\\s+(builder|panel|stub)|encryptor\\s+(builder|panel)|raas|ransomware-?as-?a-?service|decryptor)\\b)(?=.*\\b(sell(ing)?|for\\s*sale|subscription|lifetime|monthly|weekly|license|rent(al)?|fud\\s+build|fresh\\s+build|panel\\s+access|access\\s+to\\s+build|\\$\\s*\\d+\\s*(/|per)\\s*(month|year|week))\\b)"
+      ],
+      "exclude_keywords": [
+        "no more ransom",
+        "nomoreransom",
+        "free decryptor",
+        "decryptor released by",
+        "decryptor available",
+        "kaspersky decryptor",
+        "eset decryptor",
+        "training",
+        "course",
+        "tabletop",
+        "ctf",
+        "krebsonsecurity",
+        "bleeping computer",
+        "according to researchers"
+      ],
+      "tags": [
+        "severity:high",
+        "category:ransomware",
+        "category:raas-builder",
+        "mitre:T1486",
+        "mitre:T1588.001"
+      ],
+      "enabled": true
+    }
+  ]
+}
