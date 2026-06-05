@@ -5,9 +5,7 @@
 **Threat Intelligence & OSINT detection platform for Telegram.**
 
 ![Python](https://img.shields.io/badge/python-3.10+-3776ab?logo=python&logoColor=white)
-![License](https://img.shields.io/github/license/controllocked/TeleScope)
 ![Release](https://img.shields.io/github/v/release/controllocked/TeleScope)
-![Stars](https://img.shields.io/github/stars/controllocked/TeleScope?style=flat)
 ![Threat Intelligence](https://img.shields.io/badge/Threat%20Intelligence-platform-cc0000)
 ![OSINT](https://img.shields.io/badge/OSINT-detection-e86000)
 ![Telegram](https://img.shields.io/badge/Telegram-MTProto-2ca5e0?logo=telegram&logoColor=white)
